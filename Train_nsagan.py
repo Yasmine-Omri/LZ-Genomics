@@ -52,11 +52,11 @@ def main(dataset: str, out_dir: str):
     n = len(unique_labels)
 
     for i in train_data.index:
-        train_data.loc[i, "sequence"] = train_data.loc[i, "sequence"].replace("N", "")
+        train_data.loc[i, "sequence"] = "".join([x for x in train_data.loc[i, "sequence"] if x in "ACGT"])
     for i in validation_data.index:
-        validation_data.loc[i, "sequence"] =  validation_data.loc[i, "sequence"].replace("N", "")
+        validation_data.loc[i, "sequence"] =  "".join([x for x in validation_data.loc[i, "sequence"] if x in "ACGT"])
     for i in test_data.index:
-        test_data.loc[i, "sequence"] =  test_data.loc[i, "sequence"].replace("N", "")
+        test_data.loc[i, "sequence"] =  "".join([x for x in test_data.loc[i, "sequence"] if x in "ACGT"])
 
     spas = [LZ78SPA(alphabet_size=4, gamma=1, compute_training_loss=False) for _ in range(n)]
     for i in range(n):
@@ -69,8 +69,6 @@ def main(dataset: str, out_dir: str):
             backshift_break_at_phrase=True
         )
 
-    stdout.flush()
-
     best_gamma = 0
     best_epoch = 0
     best_ensemble = None
@@ -78,6 +76,7 @@ def main(dataset: str, out_dir: str):
 
     print("Training...", file=stderr)
     for epoch in tqdm(range(EPOCHS), file=stderr):
+        stdout.flush()
         train_spa_oneIter(train_data, spas)
 
         print("Saving...", file=stderr)

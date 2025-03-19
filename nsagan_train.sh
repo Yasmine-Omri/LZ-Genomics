@@ -22,14 +22,16 @@
 
 # python Train_nsagan.py --dataset-dir GUE/splice/reconstructed --out-dir spas/splice > outputs/splice.txt
 
-python Train_nsagan.py --dataset-dir GUE/EMP/H4 --out-dir spas/H4 > outputs/H4.txt
-python Train_nsagan.py --dataset-dir GUE/EMP/H4ac --out-dir spas/H4ac > outputs/H4ac.txt
+# python Train_nsagan.py --dataset-dir GUE/EMP/H4 --out-dir spas/H4 > outputs/H4.txt
+# python Train_nsagan.py --dataset-dir GUE/EMP/H4ac --out-dir spas/H4ac > outputs/H4ac.txt
 
-python Train_nsagan.py --dataset-dir GUE/EMP/H3 --out-dir spas/H3 > outputs/H3.txt
-python Train_nsagan.py --dataset-dir GUE/EMP/H3K14ac --out-dir spas/H3K14ac > outputs/H3K14ac.txt
-python Train_nsagan.py --dataset-dir GUE/EMP/H3K36me3 --out-dir spas/H3K36me3 > outputs/H3K36me3.txt
-python Train_nsagan.py --dataset-dir GUE/EMP/H3K4me1 --out-dir spas/H3K4me1 > outputs/H3K4me1.txt
-python Train_nsagan.py --dataset-dir GUE/EMP/H3K4me2 --out-dir spas/H3K4me2 > outputs/H3K4me2.txt
-python Train_nsagan.py --dataset-dir GUE/EMP/H3K4me3 --out-dir spas/H3K4me3 > outputs/H3K4me3.txt
-python Train_nsagan.py --dataset-dir GUE/EMP/H3K79me3 --out-dir spas/H3K79me3 > outputs/H3K79me3.txt
-python Train_nsagan.py --dataset-dir GUE/EMP/H3K9ac --out-dir spas/H3K9ac > outputs/H3K9ac.txt
+# python Train_nsagan.py --dataset-dir GUE/EMP/H3 --out-dir spas/H3 > outputs/H3.txt
+# python Train_nsagan.py --dataset-dir GUE/EMP/H3K14ac --out-dir spas/H3K14ac > outputs/H3K14ac.txt
+# python Train_nsagan.py --dataset-dir GUE/EMP/H3K36me3 --out-dir spas/H3K36me3 > outputs/H3K36me3.txt
+# python Train_nsagan.py --dataset-dir GUE/EMP/H3K4me1 --out-dir spas/H3K4me1 > outputs/H3K4me1.txt
+# python Train_nsagan.py --dataset-dir GUE/EMP/H3K4me2 --out-dir spas/H3K4me2 > outputs/H3K4me2.txt
+# python Train_nsagan.py --dataset-dir GUE/EMP/H3K4me3 --out-dir spas/H3K4me3 > outputs/H3K4me3.txt
+# python Train_nsagan.py --dataset-dir GUE/EMP/H3K79me3 --out-dir spas/H3K79me3 > outputs/H3K79me3.txt
+# python Train_nsagan.py --dataset-dir GUE/EMP/H3K9ac --out-dir spas/H3K9ac > outputs/H3K9ac.txt
+
+python Train_nsagan.py --dataset-dir GUE/virus/covid --out-dir spas/covid > outputs/covid.txt
