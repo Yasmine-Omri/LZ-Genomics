@@ -34,4 +34,4 @@
 # python Train_nsagan.py --dataset-dir GUE/EMP/H3K79me3 --out-dir spas/H3K79me3 > outputs/H3K79me3.txt
 # python Train_nsagan.py --dataset-dir GUE/EMP/H3K9ac --out-dir spas/H3K9ac > outputs/H3K9ac.txt
 
-python Train_nsagan.py --dataset-dir GUE/virus/covid --out-dir spas/covid > outputs/covid.txt
+python Train_nsagan.py --dataset-dir GUE/mouse/0 --out-dir spas/covid > outputs/covid.txt

@@ -49,6 +49,8 @@ GAMMA = None
 NB_TRAIN_ITERATIONS = None
 HANDLE_N_SETTING = None 
 RATIO_PRETRAIN_TRAIN = None # nb of pretrained sequences / nb train sequences
+ENSEMBLE_TYPE = None
+NUM_THREADS = None
 
 
 import argparse
@@ -146,38 +148,49 @@ def train_spa(data, spa, iterations):
             logloss_per_label[label].append(train_logloss)
     return train_logloss
 
-def test_seq (data, spa, start_percentage, end_percentage, step):
+# def test_seq (data, spa, num_threads = 32):
+#     # for every test seq,
+#     # run it through all spas
+#     # classification = label associated with lowest loss spa
+#     # check classification against ground truth
+#     # compute accuracy (of all test runs)
+#     best_accuracy = 0
+#     nb_correct = 0
+#     nb_test_total = 0
+#     for row in data.itertuples():
+#         seq = row[1]
+#         correct_label = row[2]
+#         encoded_seq = Sequence(seq, charmap=CharacterMap("ACGT"))
+#         seq_len = len(seq)
+#         nb_test_total += 1
+#         spa_logloss = []
+#         for index in range(len(spa)):
+#             spa_logloss.append(spa[index].compute_test_loss(encoded_seq, include_prev_context=False) / seq_len)
+
+#         predicted_label = spa_logloss.index(min(spa_logloss))
+        
+#         if predicted_label == correct_label:
+#             nb_correct += 1 
+        
+#         accuracy = nb_correct / nb_test_total 
+
+#         if accuracy > best_accuracy:
+#             best_accuracy = accuracy
+#     return best_accuracy
+
+def test_seq (data: pd.DataFrame, spas: list[LZ78SPA], n_threads=32):
     # for every test seq,
     # run it through all spas
     # classification = label associated with lowest loss spa
     # check classification against ground truth
     # compute accuracy (of all test runs)
-    best_accuracy = 0
-    best_context_percent = None
-    for context_percent in range(start_percentage,end_percentage,step):
-        nb_correct = 0
-        nb_test_total = 0
-        for row in data.itertuples():
-            seq = row[1]
-            correct_label = row[2]
-            encoded_seq = Sequence(seq, charmap=CharacterMap("ACGT"))
-            seq_len = len(seq)
-            nb_test_total += 1
-            spa_logloss = []
-            for index in range(len(spa)):
-                spa_logloss.append(spa[index].compute_test_loss(encoded_seq, include_prev_context=False) / seq_len)
-
-            predicted_label = spa_logloss.index(min(spa_logloss))
-            
-            if predicted_label == correct_label:
-                nb_correct += 1 
-        
-        accuracy = nb_correct / nb_test_total 
-        #print(accuracy)
-        if accuracy > best_accuracy:
-            best_accuracy = accuracy
-            best_context_percent = context_percent
-    return best_accuracy, best_context_percent
+    labels = data["label"]
+    data = [Sequence(seq, charmap=CharacterMap("ACGT")) for seq in data["sequence"]]
+    log_losses = np.zeros((len(spas), len(data)))
+    for i in range(len(spas)):
+        log_losses[i, :] = [res["avg_log_loss"] for res in spas[i].compute_test_loss_parallel(data, num_threads=n_threads)]
+    classes = np.argmin(log_losses, axis=0)
+    return (classes == labels).sum() / len(labels)
 
 def process_sequence(sequence, setting="remove", n=10):
     if setting == "remove":
@@ -216,12 +229,16 @@ def main(dataset_folder, pretrain_file):
     global NB_TRAIN_ITERATIONS 
     global HANDLE_N_SETTING 
     global RATIO_PRETRAIN_TRAIN 
+    global ENSEMBLE_TYPE 
+    global NUM_THREADS
     
     global include_prev_contexts
     global gammas 
     global nb_train_iterations 
     global handle_N_settings 
-    global ratio_pretrain_train 
+    global ratio_pretrain_train
+    global ensemble_type
+    global num_threads
 
     read_data_in_time = time.perf_counter()
     
@@ -244,21 +261,24 @@ def main(dataset_folder, pretrain_file):
     # Test all on validation set, return best SPA
     results_df = pd.DataFrame(columns=[
     "INCLUDE_PREV_CONTEXT", "GAMMA", "NB_TRAIN_ITERATIONS", 
-    "HANDLE_N_SETTING", "RATIO_PRETRAIN_TRAIN", "VALIDATION ACCURACY"
+    "HANDLE_N_SETTING", "RATIO_PRETRAIN_TRAIN", "ENSEMBLE_TYPE", "NUM_THREADS", "VALIDATION ACCURACY"
     ])
 
     print("-----TRAINING")
     print("---SEARCH FOR BEST SPA(s)")
-    print("nb_iterations , gamma, include_prev_context, handle_N_setting, ratio, accuracy", flush=True)
+    print("nb_iterations , gamma, include_prev_context, handle_N_setting, ratio, ensemble type, num_threads, time taken, accuracy", flush=True)
     train_start_time = time.perf_counter()
-    for include_prev_context, handle_N_setting, ratio in itertools.product(
-    include_prev_contexts, handle_N_settings, ratio_pretrain_train
+    for include_prev_context, handle_N_setting, ratio, ensemble_type in itertools.product(
+    include_prev_contexts, handle_N_settings, ratio_pretrain_train, ensemble_type
     ):  
+        train_one_iter_start_time = time.perf_counter()
         INCLUDE_PREV_CONTEXT = include_prev_context
         GAMMA = gammas
         NB_TRAIN_ITERATIONS = 0
         HANDLE_N_SETTING = handle_N_setting
         RATIO_PRETRAIN_TRAIN = ratio 
+        ENSEMBLE_TYPE = ensemble_type
+        NUM_THREADS = num_threads
         
         train_data = handle_N(train_data, setting=HANDLE_N_SETTING)
         nb_train_seqs = len(train_data)
@@ -266,11 +286,19 @@ def main(dataset_folder, pretrain_file):
         nb_train_symbols = nb_train_seqs * seq_len
         
         # Create list of spas based on number of labels: (spa_0 and spa_1 for labels 0, 1)
-        spa = [LZ78SPA(ALPHABET_SIZE, gamma= 0) for _ in unique_labels]
-
+        spa = [LZ78SPA(alphabet_size=ALPHABET_SIZE, gamma= 0, compute_training_loss=False) for _ in unique_labels]
+        for i in range(len(unique_labels)):
+            spa[i].set_inference_config(
+                lb=1e-5,
+                ensemble_type= "depth",
+                ensemble_n=10,
+                backshift_parsing=True,
+                backshift_ctx_len=20,
+                backshift_break_at_phrase=True
+            )
 
         nb_pretrain_symbols = math.ceil(RATIO_PRETRAIN_TRAIN * nb_train_symbols)
-        pretrain_spa(pretrain_data, spa, nb_pretrain_symbols)
+        pretrain_spa(pretrain_data, spa, nb_pretrain_symbols) 
 
         iterated_times = 0
         for nb_iterations in nb_train_iterations:
@@ -279,13 +307,15 @@ def main(dataset_folder, pretrain_file):
             
             iterated_times = nb_iterations
             for gamma in gammas:
+                for ensemble in ENSEMBLE_TYPE:
                 # Test on validation test to assess this combination of hyperparams
-                validation_data = handle_N(validation_data)
-                for index in range(len(spa)):
-                    spa[index].set_gamma(gamma)
-                accuracy, min_context = test_seq(validation_data, spa, 0, 1, 1)
-                
-                print(f"{nb_iterations}, {gamma}, {include_prev_context}, {handle_N_setting}, {ratio}, {(accuracy * 100):.2f}", flush=True)
+                    validation_data = handle_N(validation_data)
+                    for index in range(len(spa)):
+                        spa[index].set_inference_config(gamma=gamma, ensemble_type=ensemble)
+                    accuracy = test_seq(validation_data, spa, num_threads)
+                    train_one_iter_end_time = time.perf_counter
+                    train_one_iter_duration = train_one_iter_end_time - train_one_iter_start_time
+                    print(f"{nb_iterations}, {gamma}, {include_prev_context}, {handle_N_setting}, {ratio}, {ensemble}, {NUM_THREADS}, {train_one_iter_duration:.3f}, {(accuracy * 100):.2f}", flush=True)
 
                 
                 
@@ -295,7 +325,9 @@ def main(dataset_folder, pretrain_file):
                 "NB_TRAIN_ITERATIONS": nb_iterations,
                 "HANDLE_N_SETTING": HANDLE_N_SETTING,
                 "RATIO_PRETRAIN_TRAIN": RATIO_PRETRAIN_TRAIN,
-                "MINIMUM_CONTEXT_PERCENTAGE": min_context,
+                "ENSEMBLE_TYPE": ensemble,
+                "NUM_THREADS": NUM_THREADS,
+                "TRAINING_TIME": train_one_iter_duration, 
                 "VALIDATION ACCURACY": accuracy
                 }])
 
@@ -318,17 +350,28 @@ def main(dataset_folder, pretrain_file):
     NB_TRAIN_ITERATIONS = int(best_params["NB_TRAIN_ITERATIONS"])
     HANDLE_N_SETTING = best_params["HANDLE_N_SETTING"]
     RATIO_PRETRAIN_TRAIN = best_params["RATIO_PRETRAIN_TRAIN"]
-    best_min_context = best_params["MINIMUM_CONTEXT_PERCENTAGE"]
+    ENSEMBLE_TYPE = best_params["ENSEMBLE_TYPE"]
+    NUM_THREADS = best_params["NUM_THREADS"]
 
     # Retrain our best SPAs and use that to test on test data 
-    spa = [LZ78SPA(ALPHABET_SIZE, gamma=GAMMA) for _ in unique_labels]
+    spa = [LZ78SPA(alphabet_size=ALPHABET_SIZE, gamma= GAMMA, compute_training_loss=False) for _ in unique_labels]
+    for i in range(len(unique_labels)):
+        spa[i].set_inference_config(
+            lb=1e-5,
+            ensemble_type= ENSEMBLE_TYPE,
+            ensemble_n=10,
+            backshift_parsing=True,
+            backshift_ctx_len=20,
+            backshift_break_at_phrase=True
+        )
+
     train_data = handle_N(train_data, setting=HANDLE_N_SETTING)
     nb_train_seqs = len(train_data)
     seq_len = len(train_data.iloc[0, 0])
     nb_train_symbols = nb_train_seqs * seq_len
     nb_pretrain_symbols = math.ceil(RATIO_PRETRAIN_TRAIN * nb_train_symbols)
 
-    pretrain_spa(pretrain_data, spa, nb_pretrain_symbols)
+    pretrain_spa(pretrain_data, spa, nb_pretrain_symbols) 
     spa_logloss = train_spa(train_data, spa, iterations=NB_TRAIN_ITERATIONS)
 
     train_end_time = time.perf_counter()
@@ -344,7 +387,7 @@ def main(dataset_folder, pretrain_file):
     inference_start_time = time.perf_counter()
 
     test_data = handle_N(test_data)
-    test_accuracy, trash_min_context = test_seq(test_data, spa, 0, 1, 1)
+    test_accuracy = test_seq(test_data, spa, NUM_THREADS)
 
     inference_end_time = time.perf_counter()
     print(f"Final accuracy with best hyperparameters: {(test_accuracy*100):.2f}")
@@ -402,7 +445,10 @@ if __name__ == "__main__":
                         help="Set of values for HANDLE_N_SETTING, e.g., '{remove, expand}'")
     parser.add_argument("--ratio_pretrain_train", type=str, required=True,
                         help="Set of values for RATIO_PRETRAIN_TRAIN, e.g., '{0.0, 0.1, 0.25}'")
-
+    parser.add_argument("--ensemble_type", type=str, required=True,
+                        help="Set of values for ENSEMBLE_TYPE e.g., '{depth,entropy}'")
+    parser.add_argument("--num_threads", type=str, required=True,
+                        help="Number of threads to compute on in parallel'")
     args = parser.parse_args()
 
     # Convert string inputs to Python sets
@@ -410,12 +456,18 @@ if __name__ == "__main__":
     
 
     gammas = parse_set(args.gamma)
+
     nb_train_iterations = parse_set(args.nb_train_iterations)
     nb_train_iterations = {int(x) for x in nb_train_iterations}
 
     handle_N_settings = {"remove"}
 
     ratio_pretrain_train = parse_set(args.ratio_pretrain_train)
+
+    ensemble_type = parse_set(args.ensemble_type)
+
+    num_threads = parse_set(args.num_threads)
+    num_threads = int(list(num_threads)[0])
 
     main(args.dataset_folder, args.pretrain_file)
 
