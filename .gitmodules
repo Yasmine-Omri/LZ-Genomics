@@ -1,0 +1,4 @@
+[submodule "lz78_rust"]
+	path = lz78_rust
+	url = git@github.com:NSagan271/lz78_rust.git
+	branch = nsagan/lz-transform
