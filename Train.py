@@ -110,7 +110,7 @@ def pretrain_spa(seq, spa, nb_pretrain_symbols):
             return
         # Compute log-loss for each label's SPA
         for index in range(len(spa)):
-            spa[index].train_on_block(encoded_seq, include_prev_context=INCLUDE_PREV_CONTEXT) / seq_len
+            spa[index].train_on_block(encoded_seq)
 
 
 def train_spa_oneIter(data, spa):
@@ -124,11 +124,10 @@ def train_spa_oneIter(data, spa):
         encoded_seq = Sequence(seq, charmap=CharacterMap("ACGT"))
         seq_len = len(seq)
         # Compute log-loss for the respective label's SPA
-        train_logloss = spa[label].train_on_block(encoded_seq, include_prev_context=INCLUDE_PREV_CONTEXT) / seq_len
+        spa[label].train_on_block(encoded_seq)
         
         # Append the computed log-loss to the appropriate label's list
-        logloss_per_label[label].append(train_logloss)
-    return train_logloss
+    return logloss_per_label
 
 def train_spa(data, spa, iterations):
     global INCLUDE_PREV_CONTEXT
@@ -142,11 +141,10 @@ def train_spa(data, spa, iterations):
             encoded_seq = Sequence(seq, charmap=CharacterMap("ACGT"))
             seq_len = len(seq)
             # Compute log-loss for the respective label's SPA
-            train_logloss = spa[label].train_on_block(encoded_seq, include_prev_context=INCLUDE_PREV_CONTEXT) / seq_len
+            spa[label].train_on_block(encoded_seq)
             
             # Append the computed log-loss to the appropriate label's list
-            logloss_per_label[label].append(train_logloss)
-    return train_logloss
+    return logloss_per_label
 
 # def test_seq (data, spa, num_threads = 32):
 #     # for every test seq,
@@ -268,10 +266,9 @@ def main(dataset_folder, pretrain_file):
     print("---SEARCH FOR BEST SPA(s)")
     print("nb_iterations , gamma, include_prev_context, handle_N_setting, ratio, ensemble type, num_threads, time taken, accuracy", flush=True)
     train_start_time = time.perf_counter()
-    for include_prev_context, handle_N_setting, ratio, ensemble_type in itertools.product(
-    include_prev_contexts, handle_N_settings, ratio_pretrain_train, ensemble_type
+    for include_prev_context, handle_N_setting, ratio in itertools.product(
+    include_prev_contexts, handle_N_settings, ratio_pretrain_train
     ):  
-        train_one_iter_start_time = time.perf_counter()
         INCLUDE_PREV_CONTEXT = include_prev_context
         GAMMA = gammas
         NB_TRAIN_ITERATIONS = 0
@@ -302,6 +299,7 @@ def main(dataset_folder, pretrain_file):
 
         iterated_times = 0
         for nb_iterations in nb_train_iterations:
+            train_one_iter_start_time = time.perf_counter()
             for _ in range(nb_iterations - iterated_times):
                 spa_logloss = train_spa_oneIter(train_data, spa)
             
@@ -313,7 +311,7 @@ def main(dataset_folder, pretrain_file):
                     for index in range(len(spa)):
                         spa[index].set_inference_config(gamma=gamma, ensemble_type=ensemble)
                     accuracy = test_seq(validation_data, spa, num_threads)
-                    train_one_iter_end_time = time.perf_counter
+                    train_one_iter_end_time = time.perf_counter()
                     train_one_iter_duration = train_one_iter_end_time - train_one_iter_start_time
                     print(f"{nb_iterations}, {gamma}, {include_prev_context}, {handle_N_setting}, {ratio}, {ensemble}, {NUM_THREADS}, {train_one_iter_duration:.3f}, {(accuracy * 100):.2f}", flush=True)
 
@@ -409,9 +407,6 @@ def main(dataset_folder, pretrain_file):
         # Save the binary file
         with open(binary_file_path, 'wb') as file:
             file.write(spa_bytes)
-
-        print("Tree depth", flush=True)
-        sp.get_tree_depth()
     
 
     print("-----TIME PROFILING+")

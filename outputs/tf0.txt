@@ -1,153 +1,107 @@
-GAMMA=0.3333333333333333, ENSEMBLE=depth, VAL_ACC=0.724
-GAMMA=0.3333333333333333, ENSEMBLE=entropy, VAL_ACC=0.729
-GAMMA=0.5, ENSEMBLE=depth, VAL_ACC=0.727
-GAMMA=0.5, ENSEMBLE=entropy, VAL_ACC=0.739
-GAMMA=1, ENSEMBLE=depth, VAL_ACC=0.724
-GAMMA=1, ENSEMBLE=entropy, VAL_ACC=0.742
-GAMMA=1.5, ENSEMBLE=depth, VAL_ACC=0.715
-GAMMA=1.5, ENSEMBLE=entropy, VAL_ACC=0.749
-GAMMA=2, ENSEMBLE=depth, VAL_ACC=0.721
-GAMMA=2, ENSEMBLE=entropy, VAL_ACC=0.752
-GAMMA=2.5, ENSEMBLE=depth, VAL_ACC=0.722
-GAMMA=2.5, ENSEMBLE=entropy, VAL_ACC=0.756
-GAMMA=3, ENSEMBLE=depth, VAL_ACC=0.726
-GAMMA=3, ENSEMBLE=entropy, VAL_ACC=0.76
-BEST_GAMMA_EPOCH=3, BEST_ENSEMBLE_EPOCH=entropy, BEST_VAL_ACC_EPOCH=0.76
-GAMMA=0.3333333333333333, ENSEMBLE=depth, VAL_ACC=0.711
-GAMMA=0.3333333333333333, ENSEMBLE=entropy, VAL_ACC=0.739
-GAMMA=0.5, ENSEMBLE=depth, VAL_ACC=0.719
-GAMMA=0.5, ENSEMBLE=entropy, VAL_ACC=0.745
-GAMMA=1, ENSEMBLE=depth, VAL_ACC=0.724
-GAMMA=1, ENSEMBLE=entropy, VAL_ACC=0.756
-GAMMA=1.5, ENSEMBLE=depth, VAL_ACC=0.733
-GAMMA=1.5, ENSEMBLE=entropy, VAL_ACC=0.757
-GAMMA=2, ENSEMBLE=depth, VAL_ACC=0.74
-GAMMA=2, ENSEMBLE=entropy, VAL_ACC=0.753
-GAMMA=2.5, ENSEMBLE=depth, VAL_ACC=0.741
-GAMMA=2.5, ENSEMBLE=entropy, VAL_ACC=0.758
-GAMMA=3, ENSEMBLE=depth, VAL_ACC=0.738
-GAMMA=3, ENSEMBLE=entropy, VAL_ACC=0.759
-BEST_GAMMA_EPOCH=3, BEST_ENSEMBLE_EPOCH=entropy, BEST_VAL_ACC_EPOCH=0.759
-GAMMA=0.3333333333333333, ENSEMBLE=depth, VAL_ACC=0.733
-GAMMA=0.3333333333333333, ENSEMBLE=entropy, VAL_ACC=0.746
-GAMMA=0.5, ENSEMBLE=depth, VAL_ACC=0.735
-GAMMA=0.5, ENSEMBLE=entropy, VAL_ACC=0.749
-GAMMA=1, ENSEMBLE=depth, VAL_ACC=0.743
-GAMMA=1, ENSEMBLE=entropy, VAL_ACC=0.755
-GAMMA=1.5, ENSEMBLE=depth, VAL_ACC=0.748
-GAMMA=1.5, ENSEMBLE=entropy, VAL_ACC=0.756
-GAMMA=2, ENSEMBLE=depth, VAL_ACC=0.751
-GAMMA=2, ENSEMBLE=entropy, VAL_ACC=0.763
-GAMMA=2.5, ENSEMBLE=depth, VAL_ACC=0.747
-GAMMA=2.5, ENSEMBLE=entropy, VAL_ACC=0.765
-GAMMA=3, ENSEMBLE=depth, VAL_ACC=0.746
-GAMMA=3, ENSEMBLE=entropy, VAL_ACC=0.768
-BEST_GAMMA_EPOCH=3, BEST_ENSEMBLE_EPOCH=entropy, BEST_VAL_ACC_EPOCH=0.768
-GAMMA=0.3333333333333333, ENSEMBLE=depth, VAL_ACC=0.728
-GAMMA=0.3333333333333333, ENSEMBLE=entropy, VAL_ACC=0.732
-GAMMA=0.5, ENSEMBLE=depth, VAL_ACC=0.728
-GAMMA=0.5, ENSEMBLE=entropy, VAL_ACC=0.742
-GAMMA=1, ENSEMBLE=depth, VAL_ACC=0.74
-GAMMA=1, ENSEMBLE=entropy, VAL_ACC=0.758
-GAMMA=1.5, ENSEMBLE=depth, VAL_ACC=0.735
-GAMMA=1.5, ENSEMBLE=entropy, VAL_ACC=0.764
-GAMMA=2, ENSEMBLE=depth, VAL_ACC=0.743
-GAMMA=2, ENSEMBLE=entropy, VAL_ACC=0.764
-GAMMA=2.5, ENSEMBLE=depth, VAL_ACC=0.741
-GAMMA=2.5, ENSEMBLE=entropy, VAL_ACC=0.767
-GAMMA=3, ENSEMBLE=depth, VAL_ACC=0.742
-GAMMA=3, ENSEMBLE=entropy, VAL_ACC=0.772
-BEST_GAMMA_EPOCH=3, BEST_ENSEMBLE_EPOCH=entropy, BEST_VAL_ACC_EPOCH=0.772
-GAMMA=0.3333333333333333, ENSEMBLE=depth, VAL_ACC=0.712
-GAMMA=0.3333333333333333, ENSEMBLE=entropy, VAL_ACC=0.727
-GAMMA=0.5, ENSEMBLE=depth, VAL_ACC=0.716
-GAMMA=0.5, ENSEMBLE=entropy, VAL_ACC=0.735
-GAMMA=1, ENSEMBLE=depth, VAL_ACC=0.724
-GAMMA=1, ENSEMBLE=entropy, VAL_ACC=0.752
-GAMMA=1.5, ENSEMBLE=depth, VAL_ACC=0.733
-GAMMA=1.5, ENSEMBLE=entropy, VAL_ACC=0.768
-GAMMA=2, ENSEMBLE=depth, VAL_ACC=0.737
-GAMMA=2, ENSEMBLE=entropy, VAL_ACC=0.768
-GAMMA=2.5, ENSEMBLE=depth, VAL_ACC=0.739
-GAMMA=2.5, ENSEMBLE=entropy, VAL_ACC=0.773
-GAMMA=3, ENSEMBLE=depth, VAL_ACC=0.738
-GAMMA=3, ENSEMBLE=entropy, VAL_ACC=0.772
-BEST_GAMMA_EPOCH=2.5, BEST_ENSEMBLE_EPOCH=entropy, BEST_VAL_ACC_EPOCH=0.773
-GAMMA=0.3333333333333333, ENSEMBLE=depth, VAL_ACC=0.713
-GAMMA=0.3333333333333333, ENSEMBLE=entropy, VAL_ACC=0.724
-GAMMA=0.5, ENSEMBLE=depth, VAL_ACC=0.713
-GAMMA=0.5, ENSEMBLE=entropy, VAL_ACC=0.741
-GAMMA=1, ENSEMBLE=depth, VAL_ACC=0.732
-GAMMA=1, ENSEMBLE=entropy, VAL_ACC=0.758
-GAMMA=1.5, ENSEMBLE=depth, VAL_ACC=0.734
-GAMMA=1.5, ENSEMBLE=entropy, VAL_ACC=0.768
-GAMMA=2, ENSEMBLE=depth, VAL_ACC=0.736
-GAMMA=2, ENSEMBLE=entropy, VAL_ACC=0.776
-GAMMA=2.5, ENSEMBLE=depth, VAL_ACC=0.735
-GAMMA=2.5, ENSEMBLE=entropy, VAL_ACC=0.775
-GAMMA=3, ENSEMBLE=depth, VAL_ACC=0.74
-GAMMA=3, ENSEMBLE=entropy, VAL_ACC=0.776
-BEST_GAMMA_EPOCH=2, BEST_ENSEMBLE_EPOCH=entropy, BEST_VAL_ACC_EPOCH=0.776
-GAMMA=0.3333333333333333, ENSEMBLE=depth, VAL_ACC=0.714
-GAMMA=0.3333333333333333, ENSEMBLE=entropy, VAL_ACC=0.725
-GAMMA=0.5, ENSEMBLE=depth, VAL_ACC=0.712
-GAMMA=0.5, ENSEMBLE=entropy, VAL_ACC=0.729
-GAMMA=1, ENSEMBLE=depth, VAL_ACC=0.721
-GAMMA=1, ENSEMBLE=entropy, VAL_ACC=0.75
-GAMMA=1.5, ENSEMBLE=depth, VAL_ACC=0.728
-GAMMA=1.5, ENSEMBLE=entropy, VAL_ACC=0.76
-GAMMA=2, ENSEMBLE=depth, VAL_ACC=0.738
-GAMMA=2, ENSEMBLE=entropy, VAL_ACC=0.772
-GAMMA=2.5, ENSEMBLE=depth, VAL_ACC=0.74
-GAMMA=2.5, ENSEMBLE=entropy, VAL_ACC=0.775
-GAMMA=3, ENSEMBLE=depth, VAL_ACC=0.745
-GAMMA=3, ENSEMBLE=entropy, VAL_ACC=0.775
-BEST_GAMMA_EPOCH=2.5, BEST_ENSEMBLE_EPOCH=entropy, BEST_VAL_ACC_EPOCH=0.775
-GAMMA=0.3333333333333333, ENSEMBLE=depth, VAL_ACC=0.707
-GAMMA=0.3333333333333333, ENSEMBLE=entropy, VAL_ACC=0.723
-GAMMA=0.5, ENSEMBLE=depth, VAL_ACC=0.712
-GAMMA=0.5, ENSEMBLE=entropy, VAL_ACC=0.728
-GAMMA=1, ENSEMBLE=depth, VAL_ACC=0.726
-GAMMA=1, ENSEMBLE=entropy, VAL_ACC=0.752
-GAMMA=1.5, ENSEMBLE=depth, VAL_ACC=0.731
-GAMMA=1.5, ENSEMBLE=entropy, VAL_ACC=0.764
-GAMMA=2, ENSEMBLE=depth, VAL_ACC=0.736
-GAMMA=2, ENSEMBLE=entropy, VAL_ACC=0.77
-GAMMA=2.5, ENSEMBLE=depth, VAL_ACC=0.736
-GAMMA=2.5, ENSEMBLE=entropy, VAL_ACC=0.773
-GAMMA=3, ENSEMBLE=depth, VAL_ACC=0.738
-GAMMA=3, ENSEMBLE=entropy, VAL_ACC=0.775
-BEST_GAMMA_EPOCH=3, BEST_ENSEMBLE_EPOCH=entropy, BEST_VAL_ACC_EPOCH=0.775
-GAMMA=0.3333333333333333, ENSEMBLE=depth, VAL_ACC=0.705
-GAMMA=0.3333333333333333, ENSEMBLE=entropy, VAL_ACC=0.727
-GAMMA=0.5, ENSEMBLE=depth, VAL_ACC=0.708
-GAMMA=0.5, ENSEMBLE=entropy, VAL_ACC=0.738
-GAMMA=1, ENSEMBLE=depth, VAL_ACC=0.726
-GAMMA=1, ENSEMBLE=entropy, VAL_ACC=0.74
-GAMMA=1.5, ENSEMBLE=depth, VAL_ACC=0.727
-GAMMA=1.5, ENSEMBLE=entropy, VAL_ACC=0.761
-GAMMA=2, ENSEMBLE=depth, VAL_ACC=0.732
-GAMMA=2, ENSEMBLE=entropy, VAL_ACC=0.767
-GAMMA=2.5, ENSEMBLE=depth, VAL_ACC=0.739
-GAMMA=2.5, ENSEMBLE=entropy, VAL_ACC=0.771
-GAMMA=3, ENSEMBLE=depth, VAL_ACC=0.746
-GAMMA=3, ENSEMBLE=entropy, VAL_ACC=0.774
-BEST_GAMMA_EPOCH=3, BEST_ENSEMBLE_EPOCH=entropy, BEST_VAL_ACC_EPOCH=0.774
-GAMMA=0.3333333333333333, ENSEMBLE=depth, VAL_ACC=0.694
-GAMMA=0.3333333333333333, ENSEMBLE=entropy, VAL_ACC=0.717
-GAMMA=0.5, ENSEMBLE=depth, VAL_ACC=0.701
-GAMMA=0.5, ENSEMBLE=entropy, VAL_ACC=0.72
-GAMMA=1, ENSEMBLE=depth, VAL_ACC=0.715
-GAMMA=1, ENSEMBLE=entropy, VAL_ACC=0.742
-GAMMA=1.5, ENSEMBLE=depth, VAL_ACC=0.726
-GAMMA=1.5, ENSEMBLE=entropy, VAL_ACC=0.755
-GAMMA=2, ENSEMBLE=depth, VAL_ACC=0.737
-GAMMA=2, ENSEMBLE=entropy, VAL_ACC=0.762
-GAMMA=2.5, ENSEMBLE=depth, VAL_ACC=0.743
-GAMMA=2.5, ENSEMBLE=entropy, VAL_ACC=0.761
-GAMMA=3, ENSEMBLE=depth, VAL_ACC=0.744
-GAMMA=3, ENSEMBLE=entropy, VAL_ACC=0.761
-BEST_GAMMA_EPOCH=2, BEST_ENSEMBLE_EPOCH=entropy, BEST_VAL_ACC_EPOCH=0.762
-
-BEST_EPOCH=5, BEST_GAMMA=2, BEST_ENSEMBLE=entropy
-TEST_ACC=0.809
+-----TRAINING
+---SEARCH FOR BEST SPA(s)
+nb_iterations , gamma, include_prev_context, handle_N_setting, ratio, ensemble type, num_threads, time taken, accuracy
+1, 0.1, True, remove, 0.0, depth, 1, 28.074, 70.90
+1, 0.1, True, remove, 0.0, entropy, 1, 50.392, 72.40
+1, 0.5, True, remove, 0.0, depth, 1, 72.014, 72.70
+1, 0.5, True, remove, 0.0, entropy, 1, 101.783, 73.90
+1, 0.33, True, remove, 0.0, depth, 1, 149.536, 72.40
+1, 0.33, True, remove, 0.0, entropy, 1, 190.620, 73.00
+1, 0.75, True, remove, 0.0, depth, 1, 224.922, 72.20
+1, 0.75, True, remove, 0.0, entropy, 1, 262.105, 74.00
+1, 1.0, True, remove, 0.0, depth, 1, 292.363, 72.40
+1, 1.0, True, remove, 0.0, entropy, 1, 322.253, 74.20
+1, 3.0, True, remove, 0.0, depth, 1, 365.668, 72.60
+1, 3.0, True, remove, 0.0, entropy, 1, 391.413, 76.00
+1, 5.0, True, remove, 0.0, depth, 1, 413.757, 73.30
+1, 5.0, True, remove, 0.0, entropy, 1, 437.627, 75.90
+3, 0.1, True, remove, 0.0, depth, 1, 41.703, 72.90
+3, 0.1, True, remove, 0.0, entropy, 1, 72.211, 73.40
+3, 0.5, True, remove, 0.0, depth, 1, 102.553, 73.50
+3, 0.5, True, remove, 0.0, entropy, 1, 133.798, 74.90
+3, 0.33, True, remove, 0.0, depth, 1, 163.149, 73.30
+3, 0.33, True, remove, 0.0, entropy, 1, 194.995, 74.60
+3, 0.75, True, remove, 0.0, depth, 1, 238.673, 74.20
+3, 0.75, True, remove, 0.0, entropy, 1, 282.265, 75.10
+3, 1.0, True, remove, 0.0, depth, 1, 312.864, 74.30
+3, 1.0, True, remove, 0.0, entropy, 1, 340.303, 75.50
+3, 3.0, True, remove, 0.0, depth, 1, 369.221, 74.60
+3, 3.0, True, remove, 0.0, entropy, 1, 403.209, 76.80
+3, 5.0, True, remove, 0.0, depth, 1, 438.999, 75.00
+3, 5.0, True, remove, 0.0, entropy, 1, 474.656, 77.30
+5, 0.1, True, remove, 0.0, depth, 1, 80.701, 70.30
+5, 0.1, True, remove, 0.0, entropy, 1, 141.292, 71.10
+5, 0.5, True, remove, 0.0, depth, 1, 278.300, 71.60
+5, 0.5, True, remove, 0.0, entropy, 1, 321.980, 73.50
+5, 0.33, True, remove, 0.0, depth, 1, 362.128, 71.20
+5, 0.33, True, remove, 0.0, entropy, 1, 404.134, 72.70
+5, 0.75, True, remove, 0.0, depth, 1, 446.442, 72.00
+5, 0.75, True, remove, 0.0, entropy, 1, 501.049, 74.70
+5, 1.0, True, remove, 0.0, depth, 1, 561.449, 72.40
+5, 1.0, True, remove, 0.0, entropy, 1, 616.629, 75.20
+5, 3.0, True, remove, 0.0, depth, 1, 669.090, 73.80
+5, 3.0, True, remove, 0.0, entropy, 1, 717.975, 77.20
+5, 5.0, True, remove, 0.0, depth, 1, 786.081, 75.20
+5, 5.0, True, remove, 0.0, entropy, 1, 836.625, 77.80
+7, 0.1, True, remove, 0.0, depth, 1, 460.221, 69.50
+7, 0.1, True, remove, 0.0, entropy, 1, 577.204, 71.10
+7, 0.5, True, remove, 0.0, depth, 1, 753.647, 71.20
+7, 0.5, True, remove, 0.0, entropy, 1, 887.285, 72.90
+7, 0.33, True, remove, 0.0, depth, 1, 1041.097, 71.40
+7, 0.33, True, remove, 0.0, entropy, 1, 1169.596, 72.50
+7, 0.75, True, remove, 0.0, depth, 1, 1279.019, 71.70
+7, 0.75, True, remove, 0.0, entropy, 1, 1373.863, 74.20
+7, 1.0, True, remove, 0.0, depth, 1, 1519.601, 72.10
+7, 1.0, True, remove, 0.0, entropy, 1, 1633.672, 75.00
+7, 3.0, True, remove, 0.0, depth, 1, 1796.963, 74.50
+7, 3.0, True, remove, 0.0, entropy, 1, 1948.432, 77.50
+7, 5.0, True, remove, 0.0, depth, 1, 2073.408, 75.10
+7, 5.0, True, remove, 0.0, entropy, 1, 2210.616, 77.70
+move, 0.0, depth, 1, 865.630, 74.60
+3, 3.0, True, remove, 0.0, entropy, 1, 927.347, 76.80
+3, 5.0, True, remove, 0.0, depth, 1, 983.482, 75.00
+3, 5.0, True, remove, 0.0, entropy, 1, 1059.119, 77.30
+4, 0.1, True, remove, 0.0, depth, 1, 102.559, 71.20
+4, 0.1, True, remove, 0.0, entropy, 1, 146.620, 71.90
+4, 0.5, True, remove, 0.0, depth, 1, 184.742, 72.80
+4, 0.5, True, remove, 0.0, entropy, 1, 220.740, 74.20
+4, 0.33, True, remove, 0.0, depth, 1, 263.673, 72.80
+4, 0.33, True, remove, 0.0, entropy, 1, 315.715, 73.20
+4, 0.75, True, remove, 0.0, depth, 1, 385.378, 73.30
+4, 0.75, True, remove, 0.0, entropy, 1, 447.490, 74.70
+4, 1.0, True, remove, 0.0, depth, 1, 495.047, 74.00
+4, 1.0, True, remove, 0.0, entropy, 1, 530.684, 75.80
+4, 1.5, True, remove, 0.0, depth, 1, 567.501, 73.50
+4, 1.5, True, remove, 0.0, entropy, 1, 605.641, 76.40
+4, 2.0, True, remove, 0.0, depth, 1, 642.018, 74.30
+4, 2.0, True, remove, 0.0, entropy, 1, 684.430, 76.40
+4, 2.5, True, remove, 0.0, depth, 1, 719.950, 74.10
+4, 2.5, True, remove, 0.0, entropy, 1, 759.007, 76.70
+4, 3.0, True, remove, 0.0, depth, 1, 795.393, 74.20
+4, 3.0, True, remove, 0.0, entropy, 1, 830.862, 77.20
+4, 5.0, True, remove, 0.0, depth, 1, 871.708, 75.00
+4, 5.0, True, remove, 0.0, entropy, 1, 914.652, 77.10
+5, 0.1, True, remove, 0.0, depth, 1, 103.273, 70.30
+5, 0.1, True, remove, 0.0, entropy, 1, 142.783, 71.10
+5, 0.5, True, remove, 0.0, depth, 1, 180.250, 71.60
+5, 0.5, True, remove, 0.0, entropy, 1, 220.318, 73.50
+5, 0.33, True, remove, 0.0, depth, 1, 275.195, 71.20
+5, 0.33, True, remove, 0.0, entropy, 1, 325.493, 72.70
+5, 0.75, True, remove, 0.0, depth, 1, 370.848, 72.00
+5, 0.75, True, remove, 0.0, entropy, 1, 411.693, 74.70
+5, 1.0, True, remove, 0.0, depth, 1, 452.050, 72.40
+5, 1.0, True, remove, 0.0, entropy, 1, 492.371, 75.20
+5, 1.5, True, remove, 0.0, depth, 1, 529.952, 73.30
+5, 1.5, True, remove, 0.0, entropy, 1, 574.880, 76.80
+5, 2.0, True, remove, 0.0, depth, 1, 618.829, 73.70
+5, 2.0, True, remove, 0.0, entropy, 1, 667.742, 76.80
+5, 2.5, True, remove, 0.0, depth, 1, 720.040, 73.90
+5, 2.5, True, remove, 0.0, entropy, 1, 772.997, 77.30
+5, 3.0, True, remove, 0.0, depth, 1, 811.899, 73.80
+5, 3.0, True, remove, 0.0, entropy, 1, 869.252, 77.20
+5, 5.0, True, remove, 0.0, depth, 1, 905.927, 75.20
+5, 5.0, True, remove, 0.0, entropy, 1, 945.210, 77.80
+6, 0.1, True, remove, 0.0, depth, 1, 200.966, 69.60
+6, 0.1, True, remove, 0.0, entropy, 1, 260.812, 71.20
+6, 0.5, True, remove, 0.0, depth, 1, 338.309, 71.30
+6, 0.5, True, remove, 0.0, entropy, 1, 447.414, 74.10
