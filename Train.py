@@ -85,7 +85,7 @@ def parse_bool(input_str):
     return {item.strip() == "True" for item in items}
 
 
-def pretrain_spa(seq, spa, nb_pretrain_symbols):
+def pretrain_spa(seq, spa: list[LZ78SPA], nb_pretrain_symbols):
     global INCLUDE_PREV_CONTEXT
     if nb_pretrain_symbols == 0:
         return
@@ -110,6 +110,8 @@ def pretrain_spa(seq, spa, nb_pretrain_symbols):
             return
         # Compute log-loss for each label's SPA
         for index in range(len(spa)):
+            if not INCLUDE_PREV_CONTEXT:
+                spa[index].reset_state()
             spa[index].train_on_block(encoded_seq)
 
 
@@ -124,6 +126,8 @@ def train_spa_oneIter(data, spa):
         encoded_seq = Sequence(seq, charmap=CharacterMap("ACGT"))
         seq_len = len(seq)
         # Compute log-loss for the respective label's SPA
+        if not INCLUDE_PREV_CONTEXT:
+            spa[label].reset_state()
         spa[label].train_on_block(encoded_seq)
         
         # Append the computed log-loss to the appropriate label's list
@@ -141,6 +145,8 @@ def train_spa(data, spa, iterations):
             encoded_seq = Sequence(seq, charmap=CharacterMap("ACGT"))
             seq_len = len(seq)
             # Compute log-loss for the respective label's SPA
+            if not INCLUDE_PREV_CONTEXT:
+                spa[label].reset_state()
             spa[label].train_on_block(encoded_seq)
             
             # Append the computed log-loss to the appropriate label's list
@@ -267,7 +273,7 @@ def main(dataset_folder, pretrain_file):
     print("nb_iterations , gamma, include_prev_context, handle_N_setting, ratio, ensemble type, num_threads, time taken, accuracy", flush=True)
     train_start_time = time.perf_counter()
     for include_prev_context, handle_N_setting, ratio in itertools.product(
-    include_prev_contexts, handle_N_settings, ratio_pretrain_train
+        include_prev_contexts, handle_N_settings, ratio_pretrain_train
     ):  
         INCLUDE_PREV_CONTEXT = include_prev_context
         GAMMA = gammas
@@ -283,11 +289,11 @@ def main(dataset_folder, pretrain_file):
         nb_train_symbols = nb_train_seqs * seq_len
         
         # Create list of spas based on number of labels: (spa_0 and spa_1 for labels 0, 1)
-        spa = [LZ78SPA(alphabet_size=ALPHABET_SIZE, gamma= 0, compute_training_loss=False) for _ in unique_labels]
+        spa = [LZ78SPA(alphabet_size=ALPHABET_SIZE, compute_training_loss=False) for _ in unique_labels]
         for i in range(len(unique_labels)):
             spa[i].set_inference_config(
                 lb=1e-5,
-                ensemble_type= "depth",
+                ensemble_type="entropy",
                 ensemble_n=10,
                 backshift_parsing=True,
                 backshift_ctx_len=20,
@@ -301,7 +307,7 @@ def main(dataset_folder, pretrain_file):
         for nb_iterations in nb_train_iterations:
             train_one_iter_start_time = time.perf_counter()
             for _ in range(nb_iterations - iterated_times):
-                spa_logloss = train_spa_oneIter(train_data, spa)
+                train_spa_oneIter(train_data, spa)
             
             iterated_times = nb_iterations
             for gamma in gammas:
@@ -317,17 +323,17 @@ def main(dataset_folder, pretrain_file):
 
                 
                 
-                current_result = pd.DataFrame([{
-                "INCLUDE_PREV_CONTEXT": INCLUDE_PREV_CONTEXT,
-                "GAMMA": gamma,
-                "NB_TRAIN_ITERATIONS": nb_iterations,
-                "HANDLE_N_SETTING": HANDLE_N_SETTING,
-                "RATIO_PRETRAIN_TRAIN": RATIO_PRETRAIN_TRAIN,
-                "ENSEMBLE_TYPE": ensemble,
-                "NUM_THREADS": NUM_THREADS,
-                "TRAINING_TIME": train_one_iter_duration, 
-                "VALIDATION ACCURACY": accuracy
-                }])
+                    current_result = pd.DataFrame([{
+                        "INCLUDE_PREV_CONTEXT": INCLUDE_PREV_CONTEXT,
+                        "GAMMA": gamma,
+                        "NB_TRAIN_ITERATIONS": nb_iterations,
+                        "HANDLE_N_SETTING": HANDLE_N_SETTING,
+                        "RATIO_PRETRAIN_TRAIN": RATIO_PRETRAIN_TRAIN,
+                        "ENSEMBLE_TYPE": ensemble,
+                        "NUM_THREADS": NUM_THREADS,
+                        "TRAINING_TIME": train_one_iter_duration, 
+                        "VALIDATION ACCURACY": accuracy
+                    }])
 
                 # Concatenate the current result with results_df
                 results_df = results_df.dropna(axis=1, how='all')
@@ -370,7 +376,7 @@ def main(dataset_folder, pretrain_file):
     nb_pretrain_symbols = math.ceil(RATIO_PRETRAIN_TRAIN * nb_train_symbols)
 
     pretrain_spa(pretrain_data, spa, nb_pretrain_symbols) 
-    spa_logloss = train_spa(train_data, spa, iterations=NB_TRAIN_ITERATIONS)
+    train_spa(train_data, spa, iterations=NB_TRAIN_ITERATIONS)
 
     train_end_time = time.perf_counter()
     train_duration = train_end_time - train_start_time

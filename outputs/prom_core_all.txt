@@ -1,39 +1,12 @@
 -----TRAINING
 ---SEARCH FOR BEST SPA(s)
 nb_iterations , gamma, include_prev_context, handle_N_setting, ratio, ensemble type, num_threads, time taken, accuracy
-1, 0.1, True, remove, 0.0, entropy, 1, 150.706, 67.53
-1, 0.1, True, remove, 0.0, depth, 1, 280.113, 66.30
-1, 0.5, True, remove, 0.0, entropy, 1, 404.154, 69.90
-1, 0.5, True, remove, 0.0, depth, 1, 503.733, 68.18
-1, 0.33, True, remove, 0.0, entropy, 1, 611.977, 69.27
-1, 0.33, True, remove, 0.0, depth, 1, 734.784, 67.18
-1, 0.75, True, remove, 0.0, entropy, 1, 841.543, 70.46
-1, 0.75, True, remove, 0.0, depth, 1, 952.200, 68.40
-1, 1.0, True, remove, 0.0, entropy, 1, 1075.151, 70.88
-1, 1.0, True, remove, 0.0, depth, 1, 1187.689, 68.56
-1, 3.0, True, remove, 0.0, entropy, 1, 1307.065, 72.20
-1, 3.0, True, remove, 0.0, depth, 1, 1437.308, 68.56
-1, 5.0, True, remove, 0.0, entropy, 1, 1571.144, 71.77
-1, 5.0, True, remove, 0.0, depth, 1, 1719.607, 68.21
-3, 0.1, True, remove, 0.0, entropy, 1, 297.213, 63.55
-3, 0.1, True, remove, 0.0, depth, 1, 458.120, 62.16
-3, 0.5, True, remove, 0.0, entropy, 1, 679.254, 66.62
-3, 0.5, True, remove, 0.0, depth, 1, 831.262, 64.26
-3, 0.33, True, remove, 0.0, entropy, 1, 978.438, 65.76
-3, 0.33, True, remove, 0.0, depth, 1, 1122.462, 63.68
-3, 0.75, True, remove, 0.0, entropy, 1, 1269.588, 67.96
-3, 0.75, True, remove, 0.0, depth, 1, 1412.442, 65.07
-3, 1.0, True, remove, 0.0, entropy, 1, 1577.550, 68.75
-3, 1.0, True, remove, 0.0, depth, 1, 1712.133, 65.81
-3, 3.0, True, remove, 0.0, entropy, 1, 1894.147, 71.32
-3, 3.0, True, remove, 0.0, depth, 1, 2049.460, 67.47
-3, 5.0, True, remove, 0.0, entropy, 1, 2200.139, 71.50
-3, 5.0, True, remove, 0.0, depth, 1, 2357.446, 67.40
-1.0, True, remove, 0.0, entropy, 1, 1099.572, 70.35
-2, 1.0, True, remove, 0.0, depth, 1, 1206.945, 67.38
-2, 1.5, True, remove, 0.0, entropy, 1, 1343.950, 71.11
-2, 1.5, True, remove, 0.0, depth, 1, 1468.008, 67.92
-2, 2.0, True, remove, 0.0, entropy, 1, 1578.118, 71.62
-2, 2.0, True, remove, 0.0, depth, 1, 1688.875, 68.16
-2, 2.5, True, remove, 0.0, entropy, 1, 1830.590, 71.71
-2, 2.5, True, remove, 0.0, depth, 1, 1951.312, 68.23
+1, 0.1, False, remove, 0.0, entropy, 48, 8.450, 66.39
+1, 0.1, False, remove, 0.0, depth, 48, 14.346, 65.49
+1, 0.5, False, remove, 0.0, entropy, 48, 22.835, 68.87
+1, 0.5, False, remove, 0.0, depth, 48, 33.427, 66.44
+1, 0.33, False, remove, 0.0, entropy, 48, 44.852, 67.99
+1, 0.33, False, remove, 0.0, depth, 48, 55.112, 66.11
+1, 0.75, False, remove, 0.0, entropy, 48, 63.824, 69.71
+1, 0.75, False, remove, 0.0, depth, 48, 73.720, 67.06
+1, 1.0, False, remove, 0.0, entropy, 48, 82.831, 70.35

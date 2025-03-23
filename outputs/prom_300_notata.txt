@@ -1,6 +1,6 @@
 -----TRAINING
 ---SEARCH FOR BEST SPA(s)
 nb_iterations , gamma, include_prev_context, handle_N_setting, ratio, ensemble type, num_threads, time taken, accuracy
-1, 0.1, True, remove, 0.0, entropy, 1, 625.322, 79.61,1, 0.1, True, remove, 0.0, depth, 1, 1242.273, 78.27
-1, 0.5, True, remove, 0.0, entropy, 1, 2078.600, 81.91,1, 0.5, True, remove, 0.0, depth, 1, 2726.472, 78.95
-1, 0.33, True, remove, 0.0, entropy, 1, 3332.122, 81.11,1, 0.33, True, remove, 0.0, depth, 1, 3960.973, 78.90
+1, 0.1, False, remove, 0.0, depth, 48, 20.500, 77.97
+1, 0.1, False, remove, 0.0, entropy, 48, 38.530, 79.71
+1, 0.5, False, remove, 0.0, depth, 48, 53.068, 78.95
