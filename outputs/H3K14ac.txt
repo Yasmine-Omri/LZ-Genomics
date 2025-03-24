@@ -1,0 +1,649 @@
+-----TRAINING
+---SEARCH FOR BEST SPA(s)
+nb_iterations , gamma, include_prev_context, handle_N_setting, ratio, ensemble type, num_threads, time taken, accuracy
+1, 0.1, False, remove, 0.0, entropy, 48, 5.339, 80.91
+1, 0.1, False, remove, 0.0, depth, 48, 8.695, 80.67
+1, 0.5, False, remove, 0.0, entropy, 48, 12.166, 81.85
+1, 0.5, False, remove, 0.0, depth, 48, 15.569, 80.79
+1, 0.33, False, remove, 0.0, entropy, 48, 18.965, 81.54
+1, 0.33, False, remove, 0.0, depth, 48, 22.388, 80.94
+1, 0.75, False, remove, 0.0, entropy, 48, 25.832, 81.36
+1, 0.75, False, remove, 0.0, depth, 48, 29.176, 80.97
+1, 1.0, False, remove, 0.0, entropy, 48, 32.613, 81.15
+1, 1.0, False, remove, 0.0, depth, 48, 35.975, 80.61
+1, 3.0, False, remove, 0.0, entropy, 48, 39.341, 78.37
+1, 3.0, False, remove, 0.0, depth, 48, 42.708, 80.30
+1, 5.0, False, remove, 0.0, entropy, 48, 46.109, 76.43
+1, 5.0, False, remove, 0.0, depth, 48, 49.496, 79.33
+3, 0.1, False, remove, 0.0, entropy, 48, 8.162, 89.02
+3, 0.1, False, remove, 0.0, depth, 48, 11.717, 89.14
+3, 0.5, False, remove, 0.0, entropy, 48, 15.250, 88.96
+3, 0.5, False, remove, 0.0, depth, 48, 18.706, 88.99
+3, 0.33, False, remove, 0.0, entropy, 48, 22.301, 88.99
+3, 0.33, False, remove, 0.0, depth, 48, 25.750, 89.17
+3, 0.75, False, remove, 0.0, entropy, 48, 29.284, 88.56
+3, 0.75, False, remove, 0.0, depth, 48, 32.806, 88.90
+3, 1.0, False, remove, 0.0, entropy, 48, 36.319, 88.35
+3, 1.0, False, remove, 0.0, depth, 48, 39.794, 88.74
+3, 3.0, False, remove, 0.0, entropy, 48, 43.341, 87.47
+3, 3.0, False, remove, 0.0, depth, 48, 46.831, 88.50
+3, 5.0, False, remove, 0.0, entropy, 48, 50.325, 85.66
+3, 5.0, False, remove, 0.0, depth, 48, 53.744, 87.78
+5, 0.1, False, remove, 0.0, entropy, 48, 8.667, 91.01
+5, 0.1, False, remove, 0.0, depth, 48, 12.156, 90.89
+5, 0.5, False, remove, 0.0, entropy, 48, 15.727, 90.68
+5, 0.5, False, remove, 0.0, depth, 48, 19.230, 90.74
+5, 0.33, False, remove, 0.0, entropy, 48, 22.835, 90.83
+5, 0.33, False, remove, 0.0, depth, 48, 26.338, 90.86
+5, 0.75, False, remove, 0.0, entropy, 48, 29.931, 90.53
+5, 0.75, False, remove, 0.0, depth, 48, 33.529, 90.50
+5, 1.0, False, remove, 0.0, entropy, 48, 37.161, 90.17
+5, 1.0, False, remove, 0.0, depth, 48, 40.717, 90.62
+5, 3.0, False, remove, 0.0, entropy, 48, 44.325, 89.29
+5, 3.0, False, remove, 0.0, depth, 48, 47.861, 89.74
+5, 5.0, False, remove, 0.0, entropy, 48, 51.514, 88.53
+5, 5.0, False, remove, 0.0, depth, 48, 55.180, 89.23
+7, 0.1, False, remove, 0.0, entropy, 48, 9.045, 91.41
+7, 0.1, False, remove, 0.0, depth, 48, 12.626, 91.26
+7, 0.5, False, remove, 0.0, entropy, 48, 16.236, 91.62
+7, 0.5, False, remove, 0.0, depth, 48, 19.824, 91.59
+7, 0.33, False, remove, 0.0, entropy, 48, 23.479, 91.59
+7, 0.33, False, remove, 0.0, depth, 48, 27.015, 91.53
+7, 0.75, False, remove, 0.0, entropy, 48, 30.691, 91.80
+7, 0.75, False, remove, 0.0, depth, 48, 34.244, 91.59
+7, 1.0, False, remove, 0.0, entropy, 48, 37.869, 91.62
+7, 1.0, False, remove, 0.0, depth, 48, 41.487, 91.47
+7, 3.0, False, remove, 0.0, entropy, 48, 45.157, 90.29
+7, 3.0, False, remove, 0.0, depth, 48, 48.718, 90.89
+7, 5.0, False, remove, 0.0, entropy, 48, 52.348, 89.89
+7, 5.0, False, remove, 0.0, depth, 48, 55.919, 90.35
+10, 0.1, False, remove, 0.0, entropy, 48, 11.958, 91.53
+10, 0.1, False, remove, 0.0, depth, 48, 15.503, 91.41
+10, 0.5, False, remove, 0.0, entropy, 48, 19.226, 91.77
+10, 0.5, False, remove, 0.0, depth, 48, 22.789, 91.53
+10, 0.33, False, remove, 0.0, entropy, 48, 26.448, 91.68
+10, 0.33, False, remove, 0.0, depth, 48, 30.285, 91.65
+10, 0.75, False, remove, 0.0, entropy, 48, 33.933, 91.80
+10, 0.75, False, remove, 0.0, depth, 48, 37.544, 91.71
+10, 1.0, False, remove, 0.0, entropy, 48, 41.194, 91.71
+10, 1.0, False, remove, 0.0, depth, 48, 44.844, 91.65
+10, 3.0, False, remove, 0.0, entropy, 48, 48.549, 91.62
+10, 3.0, False, remove, 0.0, depth, 48, 52.253, 91.80
+10, 5.0, False, remove, 0.0, entropy, 48, 55.957, 90.80
+10, 5.0, False, remove, 0.0, depth, 48, 59.509, 91.56
+1, 0.1, False, remove, 0.25, entropy, 48, 5.538, 84.24
+1, 0.1, False, remove, 0.25, depth, 48, 8.953, 84.27
+1, 0.5, False, remove, 0.25, entropy, 48, 12.415, 84.72
+1, 0.5, False, remove, 0.25, depth, 48, 15.817, 84.39
+1, 0.33, False, remove, 0.25, entropy, 48, 19.335, 84.48
+1, 0.33, False, remove, 0.25, depth, 48, 22.698, 84.39
+1, 0.75, False, remove, 0.25, entropy, 48, 26.169, 84.75
+1, 0.75, False, remove, 0.25, depth, 48, 29.589, 84.66
+1, 1.0, False, remove, 0.25, entropy, 48, 33.063, 84.66
+1, 1.0, False, remove, 0.25, depth, 48, 36.420, 84.69
+1, 3.0, False, remove, 0.25, entropy, 48, 39.925, 82.09
+1, 3.0, False, remove, 0.25, depth, 48, 43.331, 83.90
+1, 5.0, False, remove, 0.25, entropy, 48, 46.781, 80.67
+1, 5.0, False, remove, 0.25, depth, 48, 50.197, 82.75
+3, 0.1, False, remove, 0.25, entropy, 48, 8.375, 90.32
+3, 0.1, False, remove, 0.25, depth, 48, 11.871, 90.35
+3, 0.5, False, remove, 0.25, entropy, 48, 15.413, 89.68
+3, 0.5, False, remove, 0.25, depth, 48, 18.969, 90.11
+3, 0.33, False, remove, 0.25, entropy, 48, 22.523, 89.92
+3, 0.33, False, remove, 0.25, depth, 48, 26.038, 90.29
+3, 0.75, False, remove, 0.25, entropy, 48, 29.644, 89.56
+3, 0.75, False, remove, 0.25, depth, 48, 33.204, 89.77
+3, 1.0, False, remove, 0.25, entropy, 48, 36.748, 89.29
+3, 1.0, False, remove, 0.25, depth, 48, 40.239, 89.56
+3, 3.0, False, remove, 0.25, entropy, 48, 43.853, 88.26
+3, 3.0, False, remove, 0.25, depth, 48, 47.380, 89.05
+3, 5.0, False, remove, 0.25, entropy, 48, 50.930, 87.11
+3, 5.0, False, remove, 0.25, depth, 48, 54.423, 88.32
+5, 0.1, False, remove, 0.25, entropy, 48, 8.578, 91.10
+5, 0.1, False, remove, 0.25, depth, 48, 12.153, 91.01
+5, 0.5, False, remove, 0.25, entropy, 48, 15.790, 91.16
+5, 0.5, False, remove, 0.25, depth, 48, 19.328, 91.20
+5, 0.33, False, remove, 0.25, entropy, 48, 22.950, 91.29
+5, 0.33, False, remove, 0.25, depth, 48, 26.493, 91.13
+5, 0.75, False, remove, 0.25, entropy, 48, 30.170, 90.98
+5, 0.75, False, remove, 0.25, depth, 48, 33.676, 91.10
+5, 1.0, False, remove, 0.25, entropy, 48, 37.305, 90.71
+5, 1.0, False, remove, 0.25, depth, 48, 40.921, 90.98
+5, 3.0, False, remove, 0.25, entropy, 48, 44.597, 89.74
+5, 3.0, False, remove, 0.25, depth, 48, 48.182, 90.23
+5, 5.0, False, remove, 0.25, entropy, 48, 51.822, 89.14
+5, 5.0, False, remove, 0.25, depth, 48, 55.362, 89.77
+7, 0.1, False, remove, 0.25, entropy, 48, 9.374, 91.65
+7, 0.1, False, remove, 0.25, depth, 48, 13.024, 91.50
+7, 0.5, False, remove, 0.25, entropy, 48, 16.708, 91.29
+7, 0.5, False, remove, 0.25, depth, 48, 20.314, 91.47
+7, 0.33, False, remove, 0.25, entropy, 48, 24.005, 91.29
+7, 0.33, False, remove, 0.25, depth, 48, 27.673, 91.41
+7, 0.75, False, remove, 0.25, entropy, 48, 31.327, 91.10
+7, 0.75, False, remove, 0.25, depth, 48, 34.893, 91.32
+7, 1.0, False, remove, 0.25, entropy, 48, 38.547, 91.16
+7, 1.0, False, remove, 0.25, depth, 48, 42.136, 91.38
+7, 3.0, False, remove, 0.25, entropy, 48, 45.735, 90.47
+7, 3.0, False, remove, 0.25, depth, 48, 49.314, 91.23
+7, 5.0, False, remove, 0.25, entropy, 48, 52.930, 89.68
+7, 5.0, False, remove, 0.25, depth, 48, 56.604, 90.71
+10, 0.1, False, remove, 0.25, entropy, 48, 12.233, 91.56
+10, 0.1, False, remove, 0.25, depth, 48, 15.816, 91.47
+10, 0.5, False, remove, 0.25, entropy, 48, 19.599, 91.71
+10, 0.5, False, remove, 0.25, depth, 48, 23.185, 91.71
+10, 0.33, False, remove, 0.25, entropy, 48, 26.886, 91.68
+10, 0.33, False, remove, 0.25, depth, 48, 30.538, 91.59
+10, 0.75, False, remove, 0.25, entropy, 48, 34.206, 91.65
+10, 0.75, False, remove, 0.25, depth, 48, 37.827, 91.77
+10, 1.0, False, remove, 0.25, entropy, 48, 41.495, 91.62
+10, 1.0, False, remove, 0.25, depth, 48, 45.084, 91.65
+10, 3.0, False, remove, 0.25, entropy, 48, 48.821, 91.53
+10, 3.0, False, remove, 0.25, depth, 48, 52.479, 91.50
+10, 5.0, False, remove, 0.25, entropy, 48, 56.127, 90.89
+10, 5.0, False, remove, 0.25, depth, 48, 59.722, 91.29
+1, 0.1, False, remove, 0.1, entropy, 48, 5.356, 83.09
+1, 0.1, False, remove, 0.1, depth, 48, 8.688, 83.42
+1, 0.5, False, remove, 0.1, entropy, 48, 12.184, 83.78
+1, 0.5, False, remove, 0.1, depth, 48, 15.600, 83.78
+1, 0.33, False, remove, 0.1, entropy, 48, 19.001, 83.66
+1, 0.33, False, remove, 0.1, depth, 48, 22.321, 83.48
+1, 0.75, False, remove, 0.1, entropy, 48, 25.767, 83.39
+1, 0.75, False, remove, 0.1, depth, 48, 29.125, 83.87
+1, 1.0, False, remove, 0.1, entropy, 48, 32.528, 83.12
+1, 1.0, False, remove, 0.1, depth, 48, 35.907, 83.66
+1, 3.0, False, remove, 0.1, entropy, 48, 39.353, 81.03
+1, 3.0, False, remove, 0.1, depth, 48, 42.724, 82.51
+1, 5.0, False, remove, 0.1, entropy, 48, 46.180, 79.33
+1, 5.0, False, remove, 0.1, depth, 48, 49.485, 81.63
+3, 0.1, False, remove, 0.1, entropy, 48, 8.160, 90.20
+3, 0.1, False, remove, 0.1, depth, 48, 11.586, 90.14
+3, 0.5, False, remove, 0.1, entropy, 48, 15.150, 90.11
+3, 0.5, False, remove, 0.1, depth, 48, 18.588, 89.77
+3, 0.33, False, remove, 0.1, entropy, 48, 22.067, 90.05
+3, 0.33, False, remove, 0.1, depth, 48, 25.570, 89.95
+3, 0.75, False, remove, 0.1, entropy, 48, 29.106, 89.80
+3, 0.75, False, remove, 0.1, depth, 48, 32.565, 89.71
+3, 1.0, False, remove, 0.1, entropy, 48, 36.106, 89.41
+3, 1.0, False, remove, 0.1, depth, 48, 39.592, 89.32
+3, 3.0, False, remove, 0.1, entropy, 48, 43.095, 88.11
+3, 3.0, False, remove, 0.1, depth, 48, 46.606, 88.62
+3, 5.0, False, remove, 0.1, entropy, 48, 50.174, 86.60
+3, 5.0, False, remove, 0.1, depth, 48, 53.628, 87.99
+5, 0.1, False, remove, 0.1, entropy, 48, 8.633, 90.68
+5, 0.1, False, remove, 0.1, depth, 48, 12.191, 90.92
+5, 0.5, False, remove, 0.1, entropy, 48, 15.873, 91.16
+5, 0.5, False, remove, 0.1, depth, 48, 19.393, 91.10
+5, 0.33, False, remove, 0.1, entropy, 48, 22.985, 91.04
+5, 0.33, False, remove, 0.1, depth, 48, 26.482, 91.16
+5, 0.75, False, remove, 0.1, entropy, 48, 30.056, 91.23
+5, 0.75, False, remove, 0.1, depth, 48, 33.620, 91.20
+5, 1.0, False, remove, 0.1, entropy, 48, 37.268, 91.01
+5, 1.0, False, remove, 0.1, depth, 48, 40.809, 91.01
+5, 3.0, False, remove, 0.1, entropy, 48, 44.380, 89.59
+5, 3.0, False, remove, 0.1, depth, 48, 47.934, 90.59
+5, 5.0, False, remove, 0.1, entropy, 48, 51.526, 89.05
+5, 5.0, False, remove, 0.1, depth, 48, 55.046, 89.98
+7, 0.1, False, remove, 0.1, entropy, 48, 9.060, 91.62
+7, 0.1, False, remove, 0.1, depth, 48, 12.641, 91.59
+7, 0.5, False, remove, 0.1, entropy, 48, 16.311, 91.20
+7, 0.5, False, remove, 0.1, depth, 48, 19.862, 91.29
+7, 0.33, False, remove, 0.1, entropy, 48, 23.525, 91.44
+7, 0.33, False, remove, 0.1, depth, 48, 27.090, 91.41
+7, 0.75, False, remove, 0.1, entropy, 48, 30.690, 91.13
+7, 0.75, False, remove, 0.1, depth, 48, 34.344, 91.23
+7, 1.0, False, remove, 0.1, entropy, 48, 37.976, 91.26
+7, 1.0, False, remove, 0.1, depth, 48, 41.523, 91.29
+7, 3.0, False, remove, 0.1, entropy, 48, 45.147, 90.92
+7, 3.0, False, remove, 0.1, depth, 48, 48.682, 91.26
+7, 5.0, False, remove, 0.1, entropy, 48, 52.309, 89.92
+7, 5.0, False, remove, 0.1, depth, 48, 55.861, 90.89
+10, 0.1, False, remove, 0.1, entropy, 48, 12.080, 91.62
+10, 0.1, False, remove, 0.1, depth, 48, 15.682, 91.68
+10, 0.5, False, remove, 0.1, entropy, 48, 19.327, 91.83
+10, 0.5, False, remove, 0.1, depth, 48, 22.962, 91.80
+10, 0.33, False, remove, 0.1, entropy, 48, 26.661, 91.83
+10, 0.33, False, remove, 0.1, depth, 48, 30.240, 91.80
+10, 0.75, False, remove, 0.1, entropy, 48, 33.925, 91.86
+10, 0.75, False, remove, 0.1, depth, 48, 37.547, 91.80
+10, 1.0, False, remove, 0.1, entropy, 48, 41.265, 91.83
+10, 1.0, False, remove, 0.1, depth, 48, 44.858, 91.95
+10, 3.0, False, remove, 0.1, entropy, 48, 48.575, 91.50
+10, 3.0, False, remove, 0.1, depth, 48, 52.175, 91.71
+10, 5.0, False, remove, 0.1, entropy, 48, 55.841, 91.01
+10, 5.0, False, remove, 0.1, depth, 48, 59.502, 91.77
+1, 0.1, True, remove, 0.0, entropy, 48, 5.299, 81.79
+1, 0.1, True, remove, 0.0, depth, 48, 8.664, 81.60
+1, 0.5, True, remove, 0.0, entropy, 48, 12.055, 81.88
+1, 0.5, True, remove, 0.0, depth, 48, 15.437, 81.45
+1, 0.33, True, remove, 0.0, entropy, 48, 18.820, 81.75
+1, 0.33, True, remove, 0.0, depth, 48, 22.169, 81.54
+1, 0.75, True, remove, 0.0, entropy, 48, 25.597, 81.88
+1, 0.75, True, remove, 0.0, depth, 48, 28.921, 81.82
+1, 1.0, True, remove, 0.0, entropy, 48, 32.329, 81.12
+1, 1.0, True, remove, 0.0, depth, 48, 35.701, 81.69
+1, 3.0, True, remove, 0.0, entropy, 48, 39.103, 78.46
+1, 3.0, True, remove, 0.0, depth, 48, 42.498, 79.85
+1, 5.0, True, remove, 0.0, entropy, 48, 45.935, 76.25
+1, 5.0, True, remove, 0.0, depth, 48, 49.248, 78.49
+3, 0.1, True, remove, 0.0, entropy, 48, 8.208, 90.17
+3, 0.1, True, remove, 0.0, depth, 48, 11.676, 90.05
+3, 0.5, True, remove, 0.0, entropy, 48, 15.171, 89.80
+3, 0.5, True, remove, 0.0, depth, 48, 18.617, 89.59
+3, 0.33, True, remove, 0.0, entropy, 48, 22.189, 89.98
+3, 0.33, True, remove, 0.0, depth, 48, 25.671, 89.95
+3, 0.75, True, remove, 0.0, entropy, 48, 29.204, 89.50
+3, 0.75, True, remove, 0.0, depth, 48, 32.686, 89.59
+3, 1.0, True, remove, 0.0, entropy, 48, 36.224, 89.23
+3, 1.0, True, remove, 0.0, depth, 48, 39.700, 89.44
+3, 3.0, True, remove, 0.0, entropy, 48, 43.246, 87.38
+3, 3.0, True, remove, 0.0, depth, 48, 46.695, 88.56
+3, 5.0, True, remove, 0.0, entropy, 48, 50.199, 85.60
+3, 5.0, True, remove, 0.0, depth, 48, 53.653, 87.72
+5, 0.1, True, remove, 0.0, entropy, 48, 8.647, 91.16
+5, 0.1, True, remove, 0.0, depth, 48, 12.192, 91.01
+5, 0.5, True, remove, 0.0, entropy, 48, 15.834, 91.10
+5, 0.5, True, remove, 0.0, depth, 48, 19.400, 91.07
+5, 0.33, True, remove, 0.0, entropy, 48, 23.001, 91.04
+5, 0.33, True, remove, 0.0, depth, 48, 26.525, 91.04
+5, 0.75, True, remove, 0.0, entropy, 48, 30.173, 90.89
+5, 0.75, True, remove, 0.0, depth, 48, 33.725, 91.01
+5, 1.0, True, remove, 0.0, entropy, 48, 37.302, 90.83
+5, 1.0, True, remove, 0.0, depth, 48, 40.870, 90.95
+5, 3.0, True, remove, 0.0, entropy, 48, 44.498, 89.59
+5, 3.0, True, remove, 0.0, depth, 48, 48.000, 90.17
+5, 5.0, True, remove, 0.0, entropy, 48, 51.568, 88.62
+5, 5.0, True, remove, 0.0, depth, 48, 55.153, 89.62
+7, 0.1, True, remove, 0.0, entropy, 48, 8.930, 90.83
+7, 0.1, True, remove, 0.0, depth, 48, 12.468, 91.04
+7, 0.5, True, remove, 0.0, entropy, 48, 16.189, 91.29
+7, 0.5, True, remove, 0.0, depth, 48, 19.787, 91.29
+7, 0.33, True, remove, 0.0, entropy, 48, 23.381, 91.23
+7, 0.33, True, remove, 0.0, depth, 48, 26.949, 91.23
+7, 0.75, True, remove, 0.0, entropy, 48, 30.617, 91.23
+7, 0.75, True, remove, 0.0, depth, 48, 34.207, 91.23
+7, 1.0, True, remove, 0.0, entropy, 48, 37.858, 91.07
+7, 1.0, True, remove, 0.0, depth, 48, 41.418, 91.26
+7, 3.0, True, remove, 0.0, entropy, 48, 45.103, 90.56
+7, 3.0, True, remove, 0.0, depth, 48, 48.655, 90.74
+7, 5.0, True, remove, 0.0, entropy, 48, 52.271, 90.05
+7, 5.0, True, remove, 0.0, depth, 48, 55.811, 90.56
+10, 0.1, True, remove, 0.0, entropy, 48, 11.952, 91.01
+10, 0.1, True, remove, 0.0, depth, 48, 15.507, 90.98
+10, 0.5, True, remove, 0.0, entropy, 48, 19.189, 91.35
+10, 0.5, True, remove, 0.0, depth, 48, 22.767, 91.32
+10, 0.33, True, remove, 0.0, entropy, 48, 26.448, 91.20
+10, 0.33, True, remove, 0.0, depth, 48, 30.105, 91.16
+10, 0.75, True, remove, 0.0, entropy, 48, 33.733, 91.32
+10, 0.75, True, remove, 0.0, depth, 48, 37.291, 91.47
+10, 1.0, True, remove, 0.0, entropy, 48, 40.985, 91.41
+10, 1.0, True, remove, 0.0, depth, 48, 44.598, 91.50
+10, 3.0, True, remove, 0.0, entropy, 48, 48.226, 90.98
+10, 3.0, True, remove, 0.0, depth, 48, 51.792, 91.35
+10, 5.0, True, remove, 0.0, entropy, 48, 55.514, 90.56
+10, 5.0, True, remove, 0.0, depth, 48, 59.163, 91.04
+1, 0.1, True, remove, 0.25, entropy, 48, 5.541, 84.90
+1, 0.1, True, remove, 0.25, depth, 48, 9.004, 84.60
+1, 0.5, True, remove, 0.25, entropy, 48, 12.495, 85.11
+1, 0.5, True, remove, 0.25, depth, 48, 15.997, 84.63
+1, 0.33, True, remove, 0.25, entropy, 48, 19.481, 85.02
+1, 0.33, True, remove, 0.25, depth, 48, 22.875, 84.87
+1, 0.75, True, remove, 0.25, entropy, 48, 26.286, 84.75
+1, 0.75, True, remove, 0.25, depth, 48, 29.672, 84.66
+1, 1.0, True, remove, 0.25, entropy, 48, 33.110, 84.57
+1, 1.0, True, remove, 0.25, depth, 48, 36.487, 84.63
+1, 3.0, True, remove, 0.25, entropy, 48, 39.958, 82.30
+1, 3.0, True, remove, 0.25, depth, 48, 43.338, 83.87
+1, 5.0, True, remove, 0.25, entropy, 48, 46.780, 80.82
+1, 5.0, True, remove, 0.25, depth, 48, 50.156, 82.72
+3, 0.1, True, remove, 0.25, entropy, 48, 8.316, 90.17
+3, 0.1, True, remove, 0.25, depth, 48, 11.807, 90.35
+3, 0.5, True, remove, 0.25, entropy, 48, 15.354, 89.92
+3, 0.5, True, remove, 0.25, depth, 48, 18.889, 90.11
+3, 0.33, True, remove, 0.25, entropy, 48, 22.469, 89.95
+3, 0.33, True, remove, 0.25, depth, 48, 25.988, 90.14
+3, 0.75, True, remove, 0.25, entropy, 48, 29.545, 89.89
+3, 0.75, True, remove, 0.25, depth, 48, 33.045, 89.80
+3, 1.0, True, remove, 0.25, entropy, 48, 36.609, 89.89
+3, 1.0, True, remove, 0.25, depth, 48, 40.150, 89.80
+3, 3.0, True, remove, 0.25, entropy, 48, 43.710, 88.71
+3, 3.0, True, remove, 0.25, depth, 48, 47.158, 89.26
+3, 5.0, True, remove, 0.25, entropy, 48, 50.712, 87.41
+3, 5.0, True, remove, 0.25, depth, 48, 54.299, 88.84
+5, 0.1, True, remove, 0.25, entropy, 48, 8.687, 91.01
+5, 0.1, True, remove, 0.25, depth, 48, 12.329, 90.95
+5, 0.5, True, remove, 0.25, entropy, 48, 15.949, 91.01
+5, 0.5, True, remove, 0.25, depth, 48, 19.455, 91.07
+5, 0.33, True, remove, 0.25, entropy, 48, 23.054, 90.89
+5, 0.33, True, remove, 0.25, depth, 48, 26.565, 90.89
+5, 0.75, True, remove, 0.25, entropy, 48, 30.169, 91.16
+5, 0.75, True, remove, 0.25, depth, 48, 33.715, 90.92
+5, 1.0, True, remove, 0.25, entropy, 48, 37.323, 90.98
+5, 1.0, True, remove, 0.25, depth, 48, 40.863, 91.04
+5, 3.0, True, remove, 0.25, entropy, 48, 44.525, 89.92
+5, 3.0, True, remove, 0.25, depth, 48, 48.052, 90.80
+5, 5.0, True, remove, 0.25, entropy, 48, 51.633, 89.35
+5, 5.0, True, remove, 0.25, depth, 48, 55.166, 90.23
+7, 0.1, True, remove, 0.25, entropy, 48, 9.155, 91.53
+7, 0.1, True, remove, 0.25, depth, 48, 12.752, 91.53
+7, 0.5, True, remove, 0.25, entropy, 48, 16.392, 91.56
+7, 0.5, True, remove, 0.25, depth, 48, 19.905, 91.59
+7, 0.33, True, remove, 0.25, entropy, 48, 23.520, 91.59
+7, 0.33, True, remove, 0.25, depth, 48, 27.120, 91.56
+7, 0.75, True, remove, 0.25, entropy, 48, 30.764, 91.56
+7, 0.75, True, remove, 0.25, depth, 48, 34.376, 91.41
+7, 1.0, True, remove, 0.25, entropy, 48, 38.127, 91.44
+7, 1.0, True, remove, 0.25, depth, 48, 41.702, 91.47
+7, 3.0, True, remove, 0.25, entropy, 48, 45.416, 91.07
+7, 3.0, True, remove, 0.25, depth, 48, 49.046, 91.53
+7, 5.0, True, remove, 0.25, entropy, 48, 52.627, 90.29
+7, 5.0, True, remove, 0.25, depth, 48, 56.182, 91.20
+10, 0.1, True, remove, 0.25, entropy, 48, 11.869, 91.44
+10, 0.1, True, remove, 0.25, depth, 48, 15.516, 91.50
+10, 0.5, True, remove, 0.25, entropy, 48, 19.279, 91.62
+10, 0.5, True, remove, 0.25, depth, 48, 22.930, 91.50
+10, 0.33, True, remove, 0.25, entropy, 48, 26.675, 91.59
+10, 0.33, True, remove, 0.25, depth, 48, 30.287, 91.44
+10, 0.75, True, remove, 0.25, entropy, 48, 33.960, 91.38
+10, 0.75, True, remove, 0.25, depth, 48, 37.599, 91.50
+10, 1.0, True, remove, 0.25, entropy, 48, 41.299, 91.50
+10, 1.0, True, remove, 0.25, depth, 48, 44.934, 91.41
+10, 3.0, True, remove, 0.25, entropy, 48, 48.673, 91.29
+10, 3.0, True, remove, 0.25, depth, 48, 52.234, 91.29
+10, 5.0, True, remove, 0.25, entropy, 48, 55.957, 91.01
+10, 5.0, True, remove, 0.25, depth, 48, 59.569, 91.20
+1, 0.1, True, remove, 0.1, entropy, 48, 5.353, 82.84
+1, 0.1, True, remove, 0.1, depth, 48, 8.686, 82.63
+1, 0.5, True, remove, 0.1, entropy, 48, 12.168, 83.06
+1, 0.5, True, remove, 0.1, depth, 48, 15.551, 83.00
+1, 0.33, True, remove, 0.1, entropy, 48, 19.013, 82.97
+1, 0.33, True, remove, 0.1, depth, 48, 22.455, 83.03
+1, 0.75, True, remove, 0.1, entropy, 48, 25.871, 83.09
+1, 0.75, True, remove, 0.1, depth, 48, 29.217, 83.18
+1, 1.0, True, remove, 0.1, entropy, 48, 32.641, 82.84
+1, 1.0, True, remove, 0.1, depth, 48, 36.059, 83.06
+1, 3.0, True, remove, 0.1, entropy, 48, 39.451, 79.91
+1, 3.0, True, remove, 0.1, depth, 48, 42.801, 81.63
+1, 5.0, True, remove, 0.1, entropy, 48, 46.314, 78.52
+1, 5.0, True, remove, 0.1, depth, 48, 49.730, 80.85
+3, 0.1, True, remove, 0.1, entropy, 48, 8.181, 89.08
+3, 0.1, True, remove, 0.1, depth, 48, 11.695, 89.32
+3, 0.5, True, remove, 0.1, entropy, 48, 15.240, 89.41
+3, 0.5, True, remove, 0.1, depth, 48, 18.719, 89.05
+3, 0.33, True, remove, 0.1, entropy, 48, 22.294, 89.32
+3, 0.33, True, remove, 0.1, depth, 48, 25.801, 89.20
+3, 0.75, True, remove, 0.1, entropy, 48, 29.342, 89.38
+3, 0.75, True, remove, 0.1, depth, 48, 32.794, 89.11
+3, 1.0, True, remove, 0.1, entropy, 48, 36.376, 89.47
+3, 1.0, True, remove, 0.1, depth, 48, 39.898, 89.20
+3, 3.0, True, remove, 0.1, entropy, 48, 43.445, 88.26
+3, 3.0, True, remove, 0.1, depth, 48, 46.953, 88.65
+3, 5.0, True, remove, 0.1, entropy, 48, 50.513, 86.41
+3, 5.0, True, remove, 0.1, depth, 48, 53.988, 87.99
+5, 0.1, True, remove, 0.1, entropy, 48, 8.601, 90.80
+5, 0.1, True, remove, 0.1, depth, 48, 12.199, 90.71
+5, 0.5, True, remove, 0.1, entropy, 48, 15.887, 90.53
+5, 0.5, True, remove, 0.1, depth, 48, 19.453, 90.83
+5, 0.33, True, remove, 0.1, entropy, 48, 23.041, 90.56
+5, 0.33, True, remove, 0.1, depth, 48, 26.567, 91.01
+5, 0.75, True, remove, 0.1, entropy, 48, 30.170, 90.71
+5, 0.75, True, remove, 0.1, depth, 48, 33.695, 90.83
+5, 1.0, True, remove, 0.1, entropy, 48, 37.244, 90.65
+5, 1.0, True, remove, 0.1, depth, 48, 40.839, 90.89
+5, 3.0, True, remove, 0.1, entropy, 48, 44.450, 89.62
+5, 3.0, True, remove, 0.1, depth, 48, 48.001, 90.35
+5, 5.0, True, remove, 0.1, entropy, 48, 51.603, 89.02
+5, 5.0, True, remove, 0.1, depth, 48, 55.088, 89.44
+7, 0.1, True, remove, 0.1, entropy, 48, 9.029, 90.89
+7, 0.1, True, remove, 0.1, depth, 48, 12.551, 90.68
+7, 0.5, True, remove, 0.1, entropy, 48, 16.156, 91.44
+7, 0.5, True, remove, 0.1, depth, 48, 19.791, 91.16
+7, 0.33, True, remove, 0.1, entropy, 48, 23.477, 91.16
+7, 0.33, True, remove, 0.1, depth, 48, 27.056, 91.10
+7, 0.75, True, remove, 0.1, entropy, 48, 30.683, 91.35
+7, 0.75, True, remove, 0.1, depth, 48, 34.349, 91.29
+7, 1.0, True, remove, 0.1, entropy, 48, 37.976, 91.07
+7, 1.0, True, remove, 0.1, depth, 48, 41.513, 91.04
+7, 3.0, True, remove, 0.1, entropy, 48, 45.206, 90.32
+7, 3.0, True, remove, 0.1, depth, 48, 48.815, 91.01
+7, 5.0, True, remove, 0.1, entropy, 48, 52.469, 89.59
+7, 5.0, True, remove, 0.1, depth, 48, 56.047, 90.50
+10, 0.1, True, remove, 0.1, entropy, 48, 11.910, 91.26
+10, 0.1, True, remove, 0.1, depth, 48, 15.505, 91.50
+10, 0.5, True, remove, 0.1, entropy, 48, 19.188, 91.47
+10, 0.5, True, remove, 0.1, depth, 48, 22.843, 91.47
+10, 0.33, True, remove, 0.1, entropy, 48, 26.500, 91.38
+10, 0.33, True, remove, 0.1, depth, 48, 30.063, 91.41
+10, 0.75, True, remove, 0.1, entropy, 48, 33.722, 91.44
+10, 0.75, True, remove, 0.1, depth, 48, 37.308, 91.44
+10, 1.0, True, remove, 0.1, entropy, 48, 40.984, 91.32
+10, 1.0, True, remove, 0.1, depth, 48, 44.653, 91.44
+10, 3.0, True, remove, 0.1, entropy, 48, 48.336, 91.01
+10, 3.0, True, remove, 0.1, depth, 48, 51.970, 91.13
+10, 5.0, True, remove, 0.1, entropy, 48, 55.637, 90.56
+10, 5.0, True, remove, 0.1, depth, 48, 59.335, 91.10
+---BEST SPA(s) FOUND
+Best hyperparameters: {'INCLUDE_PREV_CONTEXT': False, 'GAMMA': 1.0, 'NB_TRAIN_ITERATIONS': 10, 'HANDLE_N_SETTING': 'remove', 'RATIO_PRETRAIN_TRAIN': 0.1, 'ENSEMBLE_TYPE': 'depth', 'NUM_THREADS': 48, 'TRAINING_TIME': 44.85841010790318, 'VALIDATION ACCURACY': 0.9195158850226929}
+-----TESTING
+Final accuracy with best hyperparameters: 92.19
+Mem in MB: 134.14
+Mem in MB: 170.59
+-----TIME PROFILING+
+Read train + val data time:  0.34626
+Number of training symbols: 13219000
+Length of one training sequence: 500
+Total training time: 1800.004 seconds
+Number of test sequences: 3305
+Length of test sequence: 500
+Read test data time:  0.02308
+Total inference time: 3.538 seconds
+Inference time/symbol: 2.141229043547036e-06 seconds
+-----MEMORY REPORT
+Filename: /data/home/nsagan/LZ-Genomics/Train.py
+
+Line #    Mem usage    Increment  Occurrences   Line Contents
+=============================================================
+   229    138.1 MiB    138.1 MiB           1   @profile
+   230                                         def main(dataset_folder, pretrain_file):
+   231                                             global INCLUDE_PREV_CONTEXT
+   232                                             global GAMMA
+   233                                             global NB_TRAIN_ITERATIONS 
+   234                                             global HANDLE_N_SETTING 
+   235                                             global RATIO_PRETRAIN_TRAIN 
+   236                                             global ENSEMBLE_TYPE 
+   237                                             global NUM_THREADS
+   238                                             
+   239                                             global include_prev_contexts
+   240                                             global gammas 
+   241                                             global nb_train_iterations 
+   242                                             global handle_N_settings 
+   243                                             global ratio_pretrain_train
+   244                                             global ensemble_type
+   245                                             global num_threads
+   246                                         
+   247    138.1 MiB      0.0 MiB           1       read_data_in_time = time.perf_counter()
+   248                                             
+   249                                             # Read train, val, test data 
+   250    138.1 MiB      0.0 MiB           1       train_path = f"{dataset_folder}/train.csv"
+   251    138.1 MiB      0.0 MiB           1       val_path = f"{dataset_folder}/dev.csv"
+   252    138.1 MiB      0.0 MiB           1       test_path = f"{dataset_folder}/test.csv"
+   253                                             
+   254                                         
+   255    154.4 MiB     16.2 MiB           1       train_data = pd.read_csv(train_path)
+   256    155.5 MiB      1.1 MiB           1       validation_data = pd.read_csv(val_path)
+   257                                             
+   258    155.5 MiB      0.0 MiB           1       ALPHABET_SIZE = 4
+   259    155.5 MiB      0.0 MiB           1       unique_labels = train_data['label'].unique()
+   260                                             
+   261    251.6 MiB      0.0 MiB           2       with open(pretrain_file, 'r') as file:
+   262    251.6 MiB     96.1 MiB           1           pretrain_data = file.read()
+   263                                             
+   264                                             # Train all SPAs using all possible combinations of hyperparams
+   265                                             # Test all on validation set, return best SPA
+   266    251.6 MiB      0.0 MiB           1       results_df = pd.DataFrame(columns=[
+   267                                             "INCLUDE_PREV_CONTEXT", "GAMMA", "NB_TRAIN_ITERATIONS", 
+   268                                             "HANDLE_N_SETTING", "RATIO_PRETRAIN_TRAIN", "ENSEMBLE_TYPE", "NUM_THREADS", "VALIDATION ACCURACY"
+   269                                             ])
+   270                                         
+   271    251.6 MiB      0.0 MiB           1       print("-----TRAINING")
+   272    251.6 MiB      0.0 MiB           1       print("---SEARCH FOR BEST SPA(s)")
+   273    251.6 MiB      0.0 MiB           1       print("nb_iterations , gamma, include_prev_context, handle_N_setting, ratio, ensemble type, num_threads, time taken, accuracy", flush=True)
+   274    251.6 MiB      0.0 MiB           1       train_start_time = time.perf_counter()
+   275    891.7 MiB    -83.9 MiB           8       for include_prev_context, handle_N_setting, ratio in itertools.product(
+   276    251.6 MiB      0.0 MiB           1           include_prev_contexts, handle_N_settings, ratio_pretrain_train
+   277                                             ):  
+   278    891.7 MiB    -59.1 MiB           6           INCLUDE_PREV_CONTEXT = include_prev_context
+   279    891.7 MiB    -59.1 MiB           6           GAMMA = gammas
+   280    891.7 MiB    -59.1 MiB           6           NB_TRAIN_ITERATIONS = 0
+   281    891.7 MiB    -59.1 MiB           6           HANDLE_N_SETTING = handle_N_setting
+   282    891.7 MiB    -59.1 MiB           6           RATIO_PRETRAIN_TRAIN = ratio 
+   283    891.7 MiB    -59.1 MiB           6           ENSEMBLE_TYPE = ensemble_type
+   284    891.7 MiB    -59.1 MiB           6           NUM_THREADS = num_threads
+   285                                                 
+   286    891.9 MiB    -38.5 MiB           6           train_data = handle_N(train_data, setting=HANDLE_N_SETTING)
+   287    891.9 MiB    -59.0 MiB           6           nb_train_seqs = len(train_data)
+   288    891.9 MiB    -59.0 MiB           6           seq_len = len(train_data.iloc[0, 0])
+   289    891.9 MiB    -59.0 MiB           6           nb_train_symbols = nb_train_seqs * seq_len
+   290                                                 
+   291                                                 # Create list of spas based on number of labels: (spa_0 and spa_1 for labels 0, 1)
+   292    891.9 MiB  -2656.5 MiB          30           spa = [LZ78SPA(alphabet_size=ALPHABET_SIZE, compute_training_loss=False) for _ in unique_labels]
+   293    417.5 MiB  -2420.4 MiB          18           for i in range(len(unique_labels)):
+   294    417.5 MiB     -0.0 MiB          24               spa[i].set_inference_config(
+   295    417.5 MiB     -0.0 MiB          12                   lb=1e-5,
+   296    417.5 MiB     -0.0 MiB          12                   ensemble_type="entropy",
+   297    417.5 MiB     -0.0 MiB          12                   ensemble_n=10,
+   298    417.5 MiB     -0.0 MiB          12                   backshift_parsing=True,
+   299    417.5 MiB     -0.0 MiB          12                   backshift_ctx_len=20,
+   300    417.5 MiB     -0.0 MiB          12                   backshift_break_at_phrase=True
+   301                                                     )
+   302                                         
+   303    417.5 MiB     -0.0 MiB           6           nb_pretrain_symbols = math.ceil(RATIO_PRETRAIN_TRAIN * nb_train_symbols)
+   304    417.5 MiB     84.7 MiB           6           pretrain_spa(pretrain_data, spa, nb_pretrain_symbols) 
+   305                                         
+   306    417.5 MiB      0.0 MiB           6           iterated_times = 0
+   307    891.7 MiB  -5505.7 MiB          36           for nb_iterations in nb_train_iterations:
+   308    854.8 MiB  -7753.0 MiB          30               train_one_iter_start_time = time.perf_counter()
+   309    891.8 MiB -15959.4 MiB          90               for _ in range(nb_iterations - iterated_times):
+   310    891.8 MiB  -9065.7 MiB          60                   train_spa_oneIter(train_data, spa)
+   311                                                     
+   312    891.8 MiB  -5502.8 MiB          30               iterated_times = nb_iterations
+   313    891.9 MiB -44043.7 MiB         240               for gamma in gammas:
+   314    891.9 MiB -115634.7 MiB         630                   for ensemble in ENSEMBLE_TYPE:
+   315                                                         # Test on validation test to assess this combination of hyperparams
+   316    891.9 MiB -77084.2 MiB         420                       validation_data = handle_N(validation_data)
+   317    891.9 MiB -231263.1 MiB        1260                       for index in range(len(spa)):
+   318    891.9 MiB -154175.4 MiB         840                           spa[index].set_inference_config(gamma=gamma, ensemble_type=ensemble)
+   319    891.9 MiB -77082.3 MiB         420                       accuracy = test_seq(validation_data, spa, num_threads)
+   320    891.9 MiB -77094.3 MiB         420                       train_one_iter_end_time = time.perf_counter()
+   321    891.9 MiB -77094.3 MiB         420                       train_one_iter_duration = train_one_iter_end_time - train_one_iter_start_time
+   322    891.9 MiB -77094.3 MiB         420                       print(f"{nb_iterations}, {gamma}, {include_prev_context}, {handle_N_setting}, {ratio}, {ensemble}, {NUM_THREADS}, {train_one_iter_duration:.3f}, {(accuracy * 100):.2f}", flush=True)
+   323                                         
+   324                                                         
+   325                                                         
+   326    891.9 MiB -154188.7 MiB         840                       current_result = pd.DataFrame([{
+   327    891.9 MiB -77094.3 MiB         420                           "INCLUDE_PREV_CONTEXT": INCLUDE_PREV_CONTEXT,
+   328    891.9 MiB -77094.3 MiB         420                           "GAMMA": gamma,
+   329    891.9 MiB -77094.3 MiB         420                           "NB_TRAIN_ITERATIONS": nb_iterations,
+   330    891.9 MiB -77094.3 MiB         420                           "HANDLE_N_SETTING": HANDLE_N_SETTING,
+   331    891.9 MiB -77094.3 MiB         420                           "RATIO_PRETRAIN_TRAIN": RATIO_PRETRAIN_TRAIN,
+   332    891.9 MiB -77094.3 MiB         420                           "ENSEMBLE_TYPE": ensemble,
+   333    891.9 MiB -77094.3 MiB         420                           "NUM_THREADS": NUM_THREADS,
+   334    891.9 MiB -77094.3 MiB         420                           "TRAINING_TIME": train_one_iter_duration, 
+   335    891.9 MiB -77094.3 MiB         420                           "VALIDATION ACCURACY": accuracy
+   336                                                             }])
+   337                                         
+   338                                                         # Concatenate the current result with results_df
+   339    891.9 MiB -38545.1 MiB         210                   results_df = results_df.dropna(axis=1, how='all')
+   340    891.9 MiB -38541.1 MiB         210                   current_result = current_result.dropna(axis=1, how='all')
+   341                                         
+   342    891.9 MiB -38540.8 MiB         210                   results_df = pd.concat([results_df, current_result], ignore_index=True)
+   343                                         
+   344                                             
+   345                                             # Find the best hyperparameter combination based on the highest accuracy
+   346    866.9 MiB    -24.9 MiB           1       print("---BEST SPA(s) FOUND")
+   347    867.1 MiB      0.2 MiB           1       best_row = results_df.loc[results_df['VALIDATION ACCURACY'].idxmax()]
+   348    867.1 MiB      0.0 MiB           1       best_params = best_row.to_dict()
+   349    867.1 MiB      0.0 MiB           1       print("Best hyperparameters:", best_params)
+   350                                         
+   351                                             # Retrain and test using the best hyperparameters
+   352    867.1 MiB      0.0 MiB           1       INCLUDE_PREV_CONTEXT = best_params["INCLUDE_PREV_CONTEXT"]
+   353    867.1 MiB      0.0 MiB           1       GAMMA = best_params["GAMMA"]
+   354    867.1 MiB      0.0 MiB           1       NB_TRAIN_ITERATIONS = int(best_params["NB_TRAIN_ITERATIONS"])
+   355    867.1 MiB      0.0 MiB           1       HANDLE_N_SETTING = best_params["HANDLE_N_SETTING"]
+   356    867.1 MiB      0.0 MiB           1       RATIO_PRETRAIN_TRAIN = best_params["RATIO_PRETRAIN_TRAIN"]
+   357    867.1 MiB      0.0 MiB           1       ENSEMBLE_TYPE = best_params["ENSEMBLE_TYPE"]
+   358    867.1 MiB      0.0 MiB           1       NUM_THREADS = best_params["NUM_THREADS"]
+   359                                         
+   360                                             # Retrain our best SPAs and use that to test on test data 
+   361    867.1 MiB   -449.6 MiB           5       spa = [LZ78SPA(alphabet_size=ALPHABET_SIZE, gamma= GAMMA, compute_training_loss=False) for _ in unique_labels]
+   362    417.6 MiB   -449.6 MiB           3       for i in range(len(unique_labels)):
+   363    417.6 MiB      0.0 MiB           4           spa[i].set_inference_config(
+   364    417.6 MiB      0.0 MiB           2               lb=1e-5,
+   365    417.6 MiB      0.0 MiB           2               ensemble_type= ENSEMBLE_TYPE,
+   366    417.6 MiB      0.0 MiB           2               ensemble_n=10,
+   367    417.6 MiB      0.0 MiB           2               backshift_parsing=True,
+   368    417.6 MiB      0.0 MiB           2               backshift_ctx_len=20,
+   369    417.6 MiB      0.0 MiB           2               backshift_break_at_phrase=True
+   370                                                 )
+   371                                         
+   372    417.6 MiB      0.0 MiB           1       train_data = handle_N(train_data, setting=HANDLE_N_SETTING)
+   373    417.6 MiB      0.0 MiB           1       nb_train_seqs = len(train_data)
+   374    417.6 MiB      0.0 MiB           1       seq_len = len(train_data.iloc[0, 0])
+   375    417.6 MiB      0.0 MiB           1       nb_train_symbols = nb_train_seqs * seq_len
+   376    417.6 MiB      0.0 MiB           1       nb_pretrain_symbols = math.ceil(RATIO_PRETRAIN_TRAIN * nb_train_symbols)
+   377                                         
+   378    417.6 MiB      0.0 MiB           1       pretrain_spa(pretrain_data, spa, nb_pretrain_symbols) 
+   379    866.1 MiB    448.6 MiB           1       train_spa(train_data, spa, iterations=NB_TRAIN_ITERATIONS)
+   380                                         
+   381    866.1 MiB      0.0 MiB           1       train_end_time = time.perf_counter()
+   382    866.1 MiB      0.0 MiB           1       train_duration = train_end_time - train_start_time
+   383                                         
+   384                                             
+   385                                             
+   386                                             # Final test
+   387    866.1 MiB      0.0 MiB           1       print("-----TESTING")
+   388    866.1 MiB      0.0 MiB           1       read_test_data_start_time = time.perf_counter()
+   389    866.3 MiB      0.2 MiB           1       test_data = pd.read_csv(test_path)
+   390                                         
+   391    866.3 MiB      0.0 MiB           1       inference_start_time = time.perf_counter()
+   392                                         
+   393    866.3 MiB      0.0 MiB           1       test_data = handle_N(test_data)
+   394    866.3 MiB     -0.0 MiB           1       test_accuracy = test_seq(test_data, spa, NUM_THREADS)
+   395                                         
+   396    866.3 MiB      0.0 MiB           1       inference_end_time = time.perf_counter()
+   397    866.3 MiB      0.0 MiB           1       print(f"Final accuracy with best hyperparameters: {(test_accuracy*100):.2f}")
+   398                                             
+   399                                                 
+   400    866.3 MiB      0.0 MiB           1       inference_duration = inference_end_time - inference_start_time
+   401                                         
+   402    866.3 MiB      0.0 MiB           1       label = 0
+   403   1036.9 MiB      0.0 MiB           3       for sp in spa:
+   404   1036.9 MiB    170.6 MiB           2           spa_bytes = bytearray(sp.to_bytes())
+   405   1036.9 MiB      0.0 MiB           2           print(f"Mem in MB: {len(spa_bytes) / (1024 * 1024):.2f}", flush=True)
+   406   1036.9 MiB      0.0 MiB           2           makedirs("best_spas", exist_ok=True)
+   407                                                 # Extract the part after 'GUE/' and replace slashes with underscores
+   408   1036.9 MiB      0.0 MiB           2           binary_file_name = dataset_folder.split("GUE/", 1)[-1].replace("/", "_")
+   409                                                 
+   410                                                 # Create the full path for the binary file
+   411   1036.9 MiB      0.0 MiB           2           binary_file_path = os.path.join("best_spas", f"{binary_file_name}_{label}.bin")
+   412   1036.9 MiB      0.0 MiB           2           label += 1
+   413                                                 # Save the binary file
+   414   1036.9 MiB      0.0 MiB           4           with open(binary_file_path, 'wb') as file:
+   415   1036.9 MiB      0.0 MiB           2               file.write(spa_bytes)
+   416                                             
+   417                                         
+   418   1036.9 MiB      0.0 MiB           1       print("-----TIME PROFILING+")
+   419   1036.9 MiB      0.0 MiB           1       print(f"Read train + val data time: {(train_start_time - read_data_in_time): .5f}")
+   420   1036.9 MiB      0.0 MiB           1       print(f"Number of training symbols: {nb_train_symbols}")
+   421   1036.9 MiB      0.0 MiB           1       print(f"Length of one training sequence: {len(train_data.iloc[0, 0])}")
+   422   1036.9 MiB      0.0 MiB           1       print(f"Total training time: {train_duration:.3f} seconds")
+   423                                             
+   424                                         
+   425   1036.9 MiB      0.0 MiB           1       print(f"Number of test sequences: {len(test_data)}")
+   426   1036.9 MiB      0.0 MiB           1       print(f"Length of test sequence: {len(test_data.iloc[0, 0])}")
+   427   1036.9 MiB      0.0 MiB           1       print(f"Read test data time: {(inference_start_time - read_test_data_start_time): .5f}")
+   428   1036.9 MiB      0.0 MiB           1       print(f"Total inference time: {inference_duration:.3f} seconds")
+   429   1036.9 MiB      0.0 MiB           1       print(f"Inference time/symbol: {inference_duration/(len(test_data) * len(test_data.iloc[0, 0]))} seconds")
+   430                                         
+   431   1036.9 MiB      0.0 MiB           1       print("-----MEMORY REPORT")
+
+

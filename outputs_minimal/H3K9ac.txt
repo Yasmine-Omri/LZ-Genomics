@@ -1,0 +1,264 @@
+-----TRAINING
+---SEARCH FOR BEST SPA(s)
+nb_iterations , gamma, include_prev_context, handle_N_setting, ratio, ensemble type, num_threads, time taken, accuracy
+1, 0.1, False, remove, 0.0, entropy, 64, 2.603, 76.21
+1, 0.5, False, remove, 0.0, entropy, 64, 3.457, 77.08
+1, 0.33, False, remove, 0.0, entropy, 64, 4.350, 77.26
+1, 0.75, False, remove, 0.0, entropy, 64, 5.217, 77.29
+1, 1.0, False, remove, 0.0, entropy, 64, 6.108, 77.22
+1, 3.0, False, remove, 0.0, entropy, 64, 7.005, 75.96
+1, 5.0, False, remove, 0.0, entropy, 64, 7.878, 74.38
+3, 0.1, False, remove, 0.0, entropy, 64, 4.766, 83.48
+3, 0.5, False, remove, 0.0, entropy, 64, 5.723, 83.88
+3, 0.33, False, remove, 0.0, entropy, 64, 6.684, 84.06
+3, 0.75, False, remove, 0.0, entropy, 64, 7.666, 83.30
+3, 1.0, False, remove, 0.0, entropy, 64, 8.684, 83.52
+3, 3.0, False, remove, 0.0, entropy, 64, 9.660, 82.51
+3, 5.0, False, remove, 0.0, entropy, 64, 10.650, 81.83
+5, 0.1, False, remove, 0.0, entropy, 64, 5.220, 84.24
+5, 0.5, False, remove, 0.0, entropy, 64, 6.267, 84.27
+5, 0.33, False, remove, 0.0, entropy, 64, 7.363, 84.13
+5, 0.75, False, remove, 0.0, entropy, 64, 8.450, 84.20
+5, 1.0, False, remove, 0.0, entropy, 64, 9.509, 84.24
+5, 3.0, False, remove, 0.0, entropy, 64, 10.543, 84.09
+5, 5.0, False, remove, 0.0, entropy, 64, 11.597, 83.63
+7, 0.1, False, remove, 0.0, entropy, 64, 5.923, 84.17
+7, 0.5, False, remove, 0.0, entropy, 64, 6.988, 84.63
+7, 0.33, False, remove, 0.0, entropy, 64, 8.067, 84.35
+7, 0.75, False, remove, 0.0, entropy, 64, 9.179, 84.63
+7, 1.0, False, remove, 0.0, entropy, 64, 10.270, 84.56
+7, 3.0, False, remove, 0.0, entropy, 64, 11.324, 84.31
+7, 5.0, False, remove, 0.0, entropy, 64, 12.380, 83.99
+10, 0.1, False, remove, 0.0, entropy, 64, 8.509, 85.21
+10, 0.5, False, remove, 0.0, entropy, 64, 9.653, 85.03
+10, 0.33, False, remove, 0.0, entropy, 64, 10.743, 84.78
+10, 0.75, False, remove, 0.0, entropy, 64, 11.850, 85.14
+10, 1.0, False, remove, 0.0, entropy, 64, 12.960, 85.14
+10, 3.0, False, remove, 0.0, entropy, 64, 14.103, 84.85
+10, 5.0, False, remove, 0.0, entropy, 64, 15.188, 84.74
+---BEST SPA(s) FOUND
+Best hyperparameters: {'INCLUDE_PREV_CONTEXT': False, 'GAMMA': 0.1, 'NB_TRAIN_ITERATIONS': 10, 'HANDLE_N_SETTING': 'remove', 'RATIO_PRETRAIN_TRAIN': 0.0, 'ENSEMBLE_TYPE': 'entropy', 'NUM_THREADS': 64, 'TRAINING_TIME': 8.509098758921027, 'VALIDATION ACCURACY': 0.8521050737675423}
+-----TESTING
+Final accuracy with best hyperparameters: 86.79
+Mem in MB: 113.59
+Mem in MB: 140.95
+-----TIME PROFILING+
+Read train + val data time:  0.26716
+Number of training symbols: 11112000
+Length of one training sequence: 500
+Total training time: 111.437 seconds
+Number of test sequences: 2779
+Length of test sequence: 500
+Read test data time:  0.02247
+Total inference time: 2.988 seconds
+Inference time/symbol: 2.150181728506011e-06 seconds
+-----MEMORY REPORT
+Filename: /data/home/nsagan/LZ-Genomics/Train.py
+
+Line #    Mem usage    Increment  Occurrences   Line Contents
+=============================================================
+   229    138.3 MiB    138.3 MiB           1   @profile
+   230                                         def main(dataset_folder, pretrain_file):
+   231                                             global INCLUDE_PREV_CONTEXT
+   232                                             global GAMMA
+   233                                             global NB_TRAIN_ITERATIONS 
+   234                                             global HANDLE_N_SETTING 
+   235                                             global RATIO_PRETRAIN_TRAIN 
+   236                                             global ENSEMBLE_TYPE 
+   237                                             global NUM_THREADS
+   238                                             
+   239                                             global include_prev_contexts
+   240                                             global gammas 
+   241                                             global nb_train_iterations 
+   242                                             global handle_N_settings 
+   243                                             global ratio_pretrain_train
+   244                                             global ensemble_type
+   245                                             global num_threads
+   246                                         
+   247    138.3 MiB      0.0 MiB           1       read_data_in_time = time.perf_counter()
+   248                                             
+   249                                             # Read train, val, test data 
+   250    138.3 MiB      0.0 MiB           1       train_path = f"{dataset_folder}/train.csv"
+   251    138.3 MiB      0.0 MiB           1       val_path = f"{dataset_folder}/dev.csv"
+   252    138.3 MiB      0.0 MiB           1       test_path = f"{dataset_folder}/test.csv"
+   253                                             
+   254                                         
+   255    152.0 MiB     13.7 MiB           1       train_data = pd.read_csv(train_path)
+   256    153.1 MiB      1.1 MiB           1       validation_data = pd.read_csv(val_path)
+   257                                             
+   258    153.1 MiB      0.0 MiB           1       ALPHABET_SIZE = 4
+   259    153.1 MiB      0.0 MiB           1       unique_labels = train_data['label'].unique()
+   260                                             
+   261    249.1 MiB      0.0 MiB           2       with open(pretrain_file, 'r') as file:
+   262    249.1 MiB     96.0 MiB           1           pretrain_data = file.read()
+   263                                             
+   264                                             # Train all SPAs using all possible combinations of hyperparams
+   265                                             # Test all on validation set, return best SPA
+   266    249.1 MiB      0.0 MiB           1       results_df = pd.DataFrame(columns=[
+   267                                             "INCLUDE_PREV_CONTEXT", "GAMMA", "NB_TRAIN_ITERATIONS", 
+   268                                             "HANDLE_N_SETTING", "RATIO_PRETRAIN_TRAIN", "ENSEMBLE_TYPE", "NUM_THREADS", "VALIDATION ACCURACY"
+   269                                             ])
+   270                                         
+   271    249.1 MiB      0.0 MiB           1       print("-----TRAINING")
+   272    249.1 MiB      0.0 MiB           1       print("---SEARCH FOR BEST SPA(s)")
+   273    249.1 MiB      0.0 MiB           1       print("nb_iterations , gamma, include_prev_context, handle_N_setting, ratio, ensemble type, num_threads, time taken, accuracy", flush=True)
+   274    249.1 MiB      0.0 MiB           1       train_start_time = time.perf_counter()
+   275    795.5 MiB      0.0 MiB           3       for include_prev_context, handle_N_setting, ratio in itertools.product(
+   276    249.1 MiB      0.0 MiB           1           include_prev_contexts, handle_N_settings, ratio_pretrain_train
+   277                                             ):  
+   278    249.1 MiB      0.0 MiB           1           INCLUDE_PREV_CONTEXT = include_prev_context
+   279    249.1 MiB      0.0 MiB           1           GAMMA = gammas
+   280    249.1 MiB      0.0 MiB           1           NB_TRAIN_ITERATIONS = 0
+   281    249.1 MiB      0.0 MiB           1           HANDLE_N_SETTING = handle_N_setting
+   282    249.1 MiB      0.0 MiB           1           RATIO_PRETRAIN_TRAIN = ratio 
+   283    249.1 MiB      0.0 MiB           1           ENSEMBLE_TYPE = ensemble_type
+   284    249.1 MiB      0.0 MiB           1           NUM_THREADS = num_threads
+   285                                                 
+   286    264.8 MiB     15.7 MiB           1           train_data = handle_N(train_data, setting=HANDLE_N_SETTING)
+   287    264.8 MiB      0.0 MiB           1           validation_data = handle_N(validation_data)
+   288    264.8 MiB      0.0 MiB           1           nb_train_seqs = len(train_data)
+   289    264.8 MiB      0.0 MiB           1           seq_len = len(train_data.iloc[0, 0])
+   290    264.8 MiB      0.0 MiB           1           nb_train_symbols = nb_train_seqs * seq_len
+   291                                                 
+   292                                                 # Create list of spas based on number of labels: (spa_0 and spa_1 for labels 0, 1)
+   293    264.9 MiB      0.1 MiB           5           spa = [LZ78SPA(alphabet_size=ALPHABET_SIZE, compute_training_loss=False) for _ in unique_labels]
+   294    264.9 MiB      0.0 MiB           3           for i in range(len(unique_labels)):
+   295    264.9 MiB      0.0 MiB           4               spa[i].set_inference_config(
+   296    264.9 MiB      0.0 MiB           2                   lb=1e-5,
+   297    264.9 MiB      0.0 MiB           2                   ensemble_type="entropy",
+   298    264.9 MiB      0.0 MiB           2                   ensemble_n=10,
+   299    264.9 MiB      0.0 MiB           2                   backshift_parsing=True,
+   300    264.9 MiB      0.0 MiB           2                   backshift_ctx_len=20,
+   301    264.9 MiB      0.0 MiB           2                   backshift_break_at_phrase=True
+   302                                                     )
+   303                                         
+   304    264.9 MiB      0.0 MiB           1           nb_pretrain_symbols = math.ceil(RATIO_PRETRAIN_TRAIN * nb_train_symbols)
+   305    264.9 MiB      0.0 MiB           1           pretrain_spa(pretrain_data, spa, nb_pretrain_symbols) 
+   306                                         
+   307    264.9 MiB      0.0 MiB           1           iterated_times = 0
+   308    795.5 MiB     -0.3 MiB           6           for nb_iterations in nb_train_iterations:
+   309    675.4 MiB      0.0 MiB           5               train_one_iter_start_time = time.perf_counter()
+   310    795.5 MiB      0.0 MiB          15               for _ in range(nb_iterations - iterated_times):
+   311    795.5 MiB    518.9 MiB          10                   train_spa_oneIter(train_data, spa)
+   312                                                     
+   313    795.5 MiB      0.0 MiB           5               iterated_times = nb_iterations
+   314    795.5 MiB     -1.3 MiB          40               for gamma in gammas:
+   315    795.5 MiB     -2.3 MiB          70                   for ensemble in ENSEMBLE_TYPE:
+   316                                                         # Test on validation test to assess this combination of hyperparams
+   317    795.5 MiB     -3.1 MiB         105                       for index in range(len(spa)):
+   318    795.5 MiB     -2.0 MiB          70                           spa[index].set_inference_config(gamma=gamma, ensemble_type=ensemble)
+   319    795.5 MiB      9.4 MiB          35                       accuracy = test_seq(validation_data, spa, num_threads)
+   320    795.5 MiB     -1.3 MiB          35                       train_one_iter_end_time = time.perf_counter()
+   321    795.5 MiB     -1.3 MiB          35                       train_one_iter_duration = train_one_iter_end_time - train_one_iter_start_time
+   322    795.5 MiB     -1.3 MiB          35                       print(f"{nb_iterations}, {gamma}, {include_prev_context}, {handle_N_setting}, {ratio}, {ensemble}, {NUM_THREADS}, {train_one_iter_duration:.3f}, {(accuracy * 100):.2f}", flush=True)
+   323                                         
+   324                                                         
+   325                                                         
+   326    795.5 MiB     -2.5 MiB          70                       current_result = pd.DataFrame([{
+   327    795.5 MiB     -1.3 MiB          35                           "INCLUDE_PREV_CONTEXT": INCLUDE_PREV_CONTEXT,
+   328    795.5 MiB     -1.3 MiB          35                           "GAMMA": gamma,
+   329    795.5 MiB     -1.3 MiB          35                           "NB_TRAIN_ITERATIONS": nb_iterations,
+   330    795.5 MiB     -1.3 MiB          35                           "HANDLE_N_SETTING": HANDLE_N_SETTING,
+   331    795.5 MiB     -1.3 MiB          35                           "RATIO_PRETRAIN_TRAIN": RATIO_PRETRAIN_TRAIN,
+   332    795.5 MiB     -1.3 MiB          35                           "ENSEMBLE_TYPE": ensemble,
+   333    795.5 MiB     -1.3 MiB          35                           "NUM_THREADS": NUM_THREADS,
+   334    795.5 MiB     -1.3 MiB          35                           "TRAINING_TIME": train_one_iter_duration, 
+   335    795.5 MiB     -1.3 MiB          35                           "VALIDATION ACCURACY": accuracy
+   336                                                             }])
+   337                                         
+   338                                                         # Concatenate the current result with results_df
+   339    795.5 MiB     -1.2 MiB          35                   results_df = results_df.dropna(axis=1, how='all')
+   340    795.5 MiB     -1.1 MiB          35                   current_result = current_result.dropna(axis=1, how='all')
+   341                                         
+   342    795.5 MiB     -0.7 MiB          35                   results_df = pd.concat([results_df, current_result], ignore_index=True)
+   343                                         
+   344                                             
+   345                                             # Find the best hyperparameter combination based on the highest accuracy
+   346    795.5 MiB      0.0 MiB           1       print("---BEST SPA(s) FOUND")
+   347    795.5 MiB      0.0 MiB           1       best_row = results_df.loc[results_df['VALIDATION ACCURACY'].idxmax()]
+   348    795.5 MiB      0.0 MiB           1       best_params = best_row.to_dict()
+   349    795.5 MiB      0.0 MiB           1       print("Best hyperparameters:", best_params)
+   350                                         
+   351                                             # Retrain and test using the best hyperparameters
+   352    795.5 MiB      0.0 MiB           1       INCLUDE_PREV_CONTEXT = best_params["INCLUDE_PREV_CONTEXT"]
+   353    795.5 MiB      0.0 MiB           1       GAMMA = best_params["GAMMA"]
+   354    795.5 MiB      0.0 MiB           1       NB_TRAIN_ITERATIONS = int(best_params["NB_TRAIN_ITERATIONS"])
+   355    795.5 MiB      0.0 MiB           1       HANDLE_N_SETTING = best_params["HANDLE_N_SETTING"]
+   356    795.5 MiB      0.0 MiB           1       RATIO_PRETRAIN_TRAIN = best_params["RATIO_PRETRAIN_TRAIN"]
+   357    795.5 MiB      0.0 MiB           1       ENSEMBLE_TYPE = best_params["ENSEMBLE_TYPE"]
+   358    795.5 MiB      0.0 MiB           1       NUM_THREADS = best_params["NUM_THREADS"]
+   359                                         
+   360                                             # Retrain our best SPAs and use that to test on test data 
+   361    795.5 MiB   -472.7 MiB           5       spa = [LZ78SPA(alphabet_size=ALPHABET_SIZE, gamma= GAMMA, compute_training_loss=False) for _ in unique_labels]
+   362    322.8 MiB   -472.7 MiB           3       for i in range(len(unique_labels)):
+   363    322.8 MiB      0.0 MiB           4           spa[i].set_inference_config(
+   364    322.8 MiB      0.0 MiB           2               lb=1e-5,
+   365    322.8 MiB      0.0 MiB           2               ensemble_type= ENSEMBLE_TYPE,
+   366    322.8 MiB      0.0 MiB           2               ensemble_n=10,
+   367    322.8 MiB      0.0 MiB           2               backshift_parsing=True,
+   368    322.8 MiB      0.0 MiB           2               backshift_ctx_len=20,
+   369    322.8 MiB      0.0 MiB           2               backshift_break_at_phrase=True
+   370                                                 )
+   371                                         
+   372    324.6 MiB      1.8 MiB           1       train_data = handle_N(train_data, setting=HANDLE_N_SETTING)
+   373    324.6 MiB      0.0 MiB           1       nb_train_seqs = len(train_data)
+   374    324.6 MiB      0.0 MiB           1       seq_len = len(train_data.iloc[0, 0])
+   375    324.6 MiB      0.0 MiB           1       nb_train_symbols = nb_train_seqs * seq_len
+   376    324.6 MiB      0.0 MiB           1       nb_pretrain_symbols = math.ceil(RATIO_PRETRAIN_TRAIN * nb_train_symbols)
+   377                                         
+   378    324.6 MiB      0.0 MiB           1       pretrain_spa(pretrain_data, spa, nb_pretrain_symbols) 
+   379    789.3 MiB    464.7 MiB           1       train_spa(train_data, spa, iterations=NB_TRAIN_ITERATIONS)
+   380                                         
+   381    789.3 MiB      0.0 MiB           1       train_end_time = time.perf_counter()
+   382    789.3 MiB      0.0 MiB           1       train_duration = train_end_time - train_start_time
+   383                                         
+   384                                             
+   385                                             
+   386                                             # Final test
+   387    789.3 MiB      0.0 MiB           1       print("-----TESTING")
+   388    789.3 MiB      0.0 MiB           1       read_test_data_start_time = time.perf_counter()
+   389    789.3 MiB      0.0 MiB           1       test_data = pd.read_csv(test_path)
+   390                                         
+   391    789.3 MiB      0.0 MiB           1       inference_start_time = time.perf_counter()
+   392                                         
+   393    789.3 MiB      0.0 MiB           1       test_data = handle_N(test_data)
+   394    789.3 MiB      0.0 MiB           1       test_accuracy = test_seq(test_data, spa, NUM_THREADS)
+   395                                         
+   396    789.3 MiB      0.0 MiB           1       inference_end_time = time.perf_counter()
+   397    789.3 MiB      0.0 MiB           1       print(f"Final accuracy with best hyperparameters: {(test_accuracy*100):.2f}")
+   398                                             
+   399                                                 
+   400    789.3 MiB      0.0 MiB           1       inference_duration = inference_end_time - inference_start_time
+   401                                         
+   402    789.3 MiB      0.0 MiB           1       label = 0
+   403    930.3 MiB      0.0 MiB           3       for sp in spa:
+   404    930.3 MiB    141.0 MiB           2           spa_bytes = bytearray(sp.to_bytes())
+   405    930.3 MiB      0.0 MiB           2           print(f"Mem in MB: {len(spa_bytes) / (1024 * 1024):.2f}", flush=True)
+   406    930.3 MiB      0.0 MiB           2           makedirs("best_spas", exist_ok=True)
+   407                                                 # Extract the part after 'GUE/' and replace slashes with underscores
+   408    930.3 MiB      0.0 MiB           2           binary_file_name = dataset_folder.split("GUE/", 1)[-1].replace("/", "_")
+   409                                                 
+   410                                                 # Create the full path for the binary file
+   411    930.3 MiB      0.0 MiB           2           binary_file_path = os.path.join("best_spas/minimal", f"{binary_file_name}_{label}.bin")
+   412    930.3 MiB      0.0 MiB           2           label += 1
+   413                                                 # Save the binary file
+   414    930.3 MiB      0.0 MiB           4           with open(binary_file_path, 'wb') as file:
+   415    930.3 MiB      0.0 MiB           2               file.write(spa_bytes)
+   416                                             
+   417                                         
+   418    930.3 MiB      0.0 MiB           1       print("-----TIME PROFILING+")
+   419    930.3 MiB      0.0 MiB           1       print(f"Read train + val data time: {(train_start_time - read_data_in_time): .5f}")
+   420    930.3 MiB      0.0 MiB           1       print(f"Number of training symbols: {nb_train_symbols}")
+   421    930.3 MiB      0.0 MiB           1       print(f"Length of one training sequence: {len(train_data.iloc[0, 0])}")
+   422    930.3 MiB      0.0 MiB           1       print(f"Total training time: {train_duration:.3f} seconds")
+   423                                             
+   424                                         
+   425    930.3 MiB      0.0 MiB           1       print(f"Number of test sequences: {len(test_data)}")
+   426    930.3 MiB      0.0 MiB           1       print(f"Length of test sequence: {len(test_data.iloc[0, 0])}")
+   427    930.3 MiB      0.0 MiB           1       print(f"Read test data time: {(inference_start_time - read_test_data_start_time): .5f}")
+   428    930.3 MiB      0.0 MiB           1       print(f"Total inference time: {inference_duration:.3f} seconds")
+   429    930.3 MiB      0.0 MiB           1       print(f"Inference time/symbol: {inference_duration/(len(test_data) * len(test_data.iloc[0, 0]))} seconds")
+   430                                         
+   431    930.3 MiB      0.0 MiB           1       print("-----MEMORY REPORT")
+
+
