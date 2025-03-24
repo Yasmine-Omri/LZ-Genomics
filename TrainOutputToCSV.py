@@ -3,8 +3,8 @@ import glob
 import re
 import pandas as pd
 
-TRAIN_RESULTS_DIR = "outputs"
-OUTPUT_CSV = "csvs/results_full_sweep.csv"
+TRAIN_RESULTS_DIR = "outputs_minimal"
+OUTPUT_CSV = "csvs/results_minimal.csv"
 
 def process_file(filename):
     with open(filename, "r") as f:
@@ -19,7 +19,6 @@ def process_file(filename):
                 for (k, v) in hyperparam.items():
                     info[k.lower()] = v
                 if "validation accuracy" in info:
-                    info["validation_accuracy"] = round(info["validation accuracy"] * 100, 2)
                     del info["validation accuracy"]
                 continue
             
@@ -55,7 +54,7 @@ def process_file(filename):
 
 
 def main():
-    files = glob.glob(f"{TRAIN_RESULTS_DIR}/*")
+    files = sorted(glob.glob(f"{TRAIN_RESULTS_DIR}/*"))
 
     df = pd.DataFrame()
     for filename in files:

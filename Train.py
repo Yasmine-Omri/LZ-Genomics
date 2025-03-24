@@ -284,6 +284,7 @@ def main(dataset_folder, pretrain_file):
         NUM_THREADS = num_threads
         
         train_data = handle_N(train_data, setting=HANDLE_N_SETTING)
+        validation_data = handle_N(validation_data)
         nb_train_seqs = len(train_data)
         seq_len = len(train_data.iloc[0, 0])
         nb_train_symbols = nb_train_seqs * seq_len
@@ -313,7 +314,6 @@ def main(dataset_folder, pretrain_file):
             for gamma in gammas:
                 for ensemble in ENSEMBLE_TYPE:
                 # Test on validation test to assess this combination of hyperparams
-                    validation_data = handle_N(validation_data)
                     for index in range(len(spa)):
                         spa[index].set_inference_config(gamma=gamma, ensemble_type=ensemble)
                     accuracy = test_seq(validation_data, spa, num_threads)
@@ -408,7 +408,7 @@ def main(dataset_folder, pretrain_file):
         binary_file_name = dataset_folder.split("GUE/", 1)[-1].replace("/", "_")
         
         # Create the full path for the binary file
-        binary_file_path = os.path.join("best_spas", f"{binary_file_name}_{label}.bin")
+        binary_file_path = os.path.join("best_spas/minimal", f"{binary_file_name}_{label}.bin")
         label += 1
         # Save the binary file
         with open(binary_file_path, 'wb') as file:
