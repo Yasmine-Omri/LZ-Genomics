@@ -2,7 +2,7 @@
 
 
 Efficient and accurate DNA sequence classification is a crucial task in genomic data analysis. In this work, we propose a lossless compression approach to DNA classification, as a lightweight alternative to computationally intensive state-of-the-art models like DNABERT-2. Leveraging the equivalence between data compression and sequential probability assignments from information theory, we construct an LZ78 classifier and optimize its performance through hyperparameter tuning. 
-Experimental results on 28 datasets from the Genomic Understanding Evaluation (GUE) suite demonstrate competitive results while drastically reducing computational costs. Unlike DNABert2, which was trained on tens of GBs of unlabeled data for 14 days on 8 NVIDIA RTX 2080Ti GPUs,  our LZ78 classifier is capable of training in under 5 hours on a standard CPU using a fraction of the training data. It also offers up to 5072× speedup in inference time and a dramatic decrease in training memory. These results highlight the potential of the LZ78 algorithm for scalable and efficient genomic data classification, particularly in resource-constrained environments. 
+Experimental results on 28 datasets from the Genomic Understanding Evaluation (GUE) suite demonstrate competitive results while drastically reducing computational costs. Unlike DNABert2, which was trained on tens of GBs of unlabeled data for 14 days on 8 NVIDIA RTX 2080Ti GPUs, our LZ78 classifier is capable of training in one hour or less on a standard CPU using a fraction of the training data. It also offers up to three orders of magnitude speedup in inference time and a dramatic decrease in training memory. These results highlight the potential of the LZ78 algorithm for scalable and efficient genomic data classification, particularly in resource-constrained environments. 
 Additionally, we open-source a streamlined pipeline to enable further exploration of compression-based classification for genomics and beyond. Future work aims to enhance its robustness and extend its applicability to more complex genomic tasks.
 
 More details can be found in our paper (BiorXiv)
@@ -17,7 +17,8 @@ More details can be found in our paper (BiorXiv)
 
 
 ## Setup
-Clone the repository and follow the Setup instructions detailed on the [LZ78 SPA Codebase](https://github.com/NSagan271/lz78_rust).
+Clone the repository and follow the Setup instructions detailed on the [LZ78 SPA Codebase](https://github.com/NSagan271/lz78_rust/blob/nsagan/lz-transform/tutorials/README.md).
+Make sure to **add the `-r` flag** when running `maturin` (i.e, **`maturin develop -r`**)
 
 ## Training
 
