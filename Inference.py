@@ -9,33 +9,31 @@ python3 Inference.py --dataset Trained_SPAs/mouse_0 --dataset_test_csv GUE/mouse
 '''
 
 
-from lz78 import Sequence, LZ78Encoder, CharacterMap, BlockLZ78Encoder, LZ78SPA
-from lz78 import encoded_sequence_from_bytes, spa_from_bytes
+from lz78 import Sequence, LZ78Encoder, CharacterMap, BlockLZ78Encoder, LZ78Classifier
+from lz78 import encoded_sequence_from_bytes, spa_from_bytes, classifier_from_files
 import numpy as np
 import lorem
 import requests
 from sys import stdout
 from os import makedirs
+import pandas as pd
+from tqdm import tqdm
+import time
 
 import argparse
 
 
 
-def test_seq (data, spa):
+def test_seq (data, spas: LZ78Classifier):
     nb_correct = 0
     nb_test_total = 0
-    for row in data.itertuples():
+    for row in tqdm(data.itertuples(), total=len(data)):
+        nb_test_total += 1
         seq = row[1]
         correct_label = row[2]
         encoded_seq = Sequence(seq, charmap=CharacterMap("ACGT"))
-        seq_len = len(seq)
-        nb_test_total += 1
-        spa_logloss = []
-        for index in range(len(spa)):
-            spa_logloss.append(spa[index].compute_test_loss(encoded_seq, include_prev_context=False) / seq_len)
-        
-        predicted_label = spa_logloss.index(min(spa_logloss))
-        
+        predicted_label = spas.classify(encoded_seq)
+                
         if predicted_label == correct_label:
             nb_correct += 1 
 
@@ -61,24 +59,20 @@ def main():
     dataset_test_csv = args.dataset_test_csv
     nb_classes = args.nb_classes
 
-    
-    spa = []
-    for label in range(nb_classes):
-        spa_bin_file = f"{dataset}_{label}.bin"
-        with open(spa_bin_file, 'rb') as file:
-            encoded_bytes = file.read()
-        spa.append(spa_from_bytes(encoded_bytes))
-
+    spa = classifier_from_files([f"{dataset}_{i}.bin" for i in range(nb_classes)])
 
     # Load only the specific row (e.g., row index 0)
-    import pandas as pd
-
 
     test_path = dataset_test_csv
     test_data = pd.read_csv(test_path)
+    for i in range(len(test_data)):
+        test_data.loc[i, "sequence"] =  "".join([x for x in test_data.loc[i, "sequence"] if x in "ACGT"])
 
+    start = time.perf_counter()
     test_accuracy = test_seq(test_data, spa)
+    end = time.perf_counter()
     print("Test accuracy", test_accuracy)
+    print("Total test time (seconds)", end - start)
 
 
 if __name__ == "__main__":
