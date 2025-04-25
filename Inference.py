@@ -4,7 +4,7 @@ The script can be easily modified to perform inference on a single sequence.
 
 EXAMPLE USAGE:
 
-python Inference.py --dataset best_spas/mouse_0 --dataset_test_csv GUE/mouse/0/test.csv --nb_classes 2
+python Inference.py --spas best_spas/mouse_0 --dataset_test_csv GUE/mouse/0/test.csv --nb_classes 2
 
 '''
 
@@ -53,7 +53,7 @@ def main():
     args = parser.parse_args()
     
     # Access arguments
-    dataset = args.dataset
+    dataset = args.spas
     dataset_test_csv = args.dataset_test_csv
     nb_classes = args.nb_classes
 
