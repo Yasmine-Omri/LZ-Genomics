@@ -5,14 +5,14 @@ Efficient and accurate DNA sequence classification is a crucial task in genomic 
 Experimental results on 28 datasets from the Genomic Understanding Evaluation (GUE) suite demonstrate competitive results while drastically reducing computational costs. Unlike DNABert2, which was trained on tens of GBs of unlabeled data for 14 days on 8 NVIDIA RTX 2080Ti GPUs, our LZ78 classifier is capable of training in one hour or less on a standard CPU using a fraction of the training data. It also offers up to three orders of magnitude speedup in inference time and a dramatic decrease in training memory. These results highlight the potential of the LZ78 algorithm for scalable and efficient genomic data classification, particularly in resource-constrained environments. 
 Additionally, we open-source a streamlined pipeline to enable further exploration of compression-based classification for genomics and beyond. Future work aims to enhance its robustness and extend its applicability to more complex genomic tasks.
 
-More details can be found in our paper (BiorXiv)
+More details can be found in our [paper][https://doi.org/10.21203/rs.3.rs-6363017/v1]
 
 <p align="center">
     <img src="imgs/spa_as_classifier.png" alt="Description" width="600">
 </p>
 
 <p align="center">
-    <img src="imgs/AccuracyRadarPlot.png" alt="Description" width="600">
+    <img src="imgs/AccuracyRadarMinSingle.png" alt="Description" width="600">
 </p>
 
 
@@ -22,14 +22,14 @@ Make sure to **add the `-r` flag** when running `maturin` (i.e, **`maturin devel
 
 ## Training
 
-Our LZ78-based classifier optimizes several hyperparameters that impact DNA classification accuracy. Five key hyperparameters were considered, including the Dirichlet parameter, context inclusion, number of epochs, unlabeled-to-labeled data ratio, and nucleotide placeholder handling. To efficiently explore hyperparameter combinations, we conducted a Hyperparameter Exploration Study to determine reasonable value ranges while maintaining computational efficiency. Although we suggest hyperparameter values that we found to be effective, the hyperparameter values used for the training sweep can be configured by the user. The final model selection follows a conventional AI framework, where classifiers are pre-trained, trained, validated, and the best-performing model is used for test data classification.
+Our LZ78-based classifier optimizes several hyperparameters that impact DNA classification accuracy. Six key hyperparameters were considered, including the Dirichlet parameter, context inclusion, number of epochs, unlabeled-to-labeled data ratio, prediction heuristic, and nucleotide placeholder handling. To efficiently explore hyperparameter combinations, we conducted a Hyperparameter Exploration Study to determine reasonable value ranges while maintaining computational efficiency. Although we suggest hyperparameter values that we found to be effective, the hyperparameter values used for the training sweep can be configured by the user. Note that for our final results we ran a minimal sweep that consists of hyperparametrs we deemed important and kept the others constant, which are highlighted in green in the figure. The minimal sweep was used as a way to decrease our training time. The final model selection follows a conventional AI framework, where classifiers are pre-trained, trained, validated, and the best-performing model is used for test data classification.
 
 <p align="center">
-    <img src="imgs/hyperparam_study.png" alt="Description" width="600">
+    <img src="imgs/hyperparam_study_new.png" alt="Description" width="600">
 </p>
 
 <p align="center">
-    <img src="imgs/framework.png" alt="Description" width="600">
+    <img src="imgs/trainfram.png" alt="Description" width="600">
 </p>
 
 The Train.py script is used to run the pre-train, train, validate, test framework for the LZ78-based classifier for a given dataset.
