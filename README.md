@@ -1,11 +1,10 @@
-# Lossless Compression (LZ78) for Genomic Data Classification
-
+# Genomic Data Classification via Universal Compression
 
 Efficient and accurate DNA sequence classification is a crucial task in genomic data analysis. In this work, we propose a lossless compression approach to DNA classification, as a lightweight alternative to computationally intensive state-of-the-art models like DNABERT-2. Leveraging the equivalence between data compression and sequential probability assignments from information theory, we construct an LZ78 classifier and optimize its performance through hyperparameter tuning. 
 Experimental results on 28 datasets from the Genomic Understanding Evaluation (GUE) suite demonstrate competitive results while drastically reducing computational costs. Unlike DNABert2, which was trained on tens of GBs of unlabeled data for 14 days on 8 NVIDIA RTX 2080Ti GPUs, our LZ78 classifier is capable of training in one hour or less on a standard CPU using a fraction of the training data. It also offers up to three orders of magnitude speedup in inference time and a dramatic decrease in training memory. These results highlight the potential of the LZ78 algorithm for scalable and efficient genomic data classification, particularly in resource-constrained environments. 
 Additionally, we open-source a streamlined pipeline to enable further exploration of compression-based classification for genomics and beyond. Future work aims to enhance its robustness and extend its applicability to more complex genomic tasks.
 
-More details can be found in our [paper][https://doi.org/10.21203/rs.3.rs-6363017/v1]
+This codebase is associated with our [paper](https://doi.org/10.21203/rs.3.rs-6363017/v1) and more details can be found there. 
 
 <p align="center">
     <img src="imgs/spa_as_classifier.png" alt="Description" width="600">
@@ -18,14 +17,14 @@ More details can be found in our [paper][https://doi.org/10.21203/rs.3.rs-636301
 
 ## Setup
 Clone the repository and follow the Setup instructions detailed on the [LZ78 SPA Codebase](https://github.com/NSagan271/lz78_rust/blob/nsagan/lz-transform/tutorials/README.md).
-Make sure to **add the `-r` flag** when running `maturin` (i.e, **`maturin develop -r`**)
+Make sure to **add the `-r` flag** when running `maturin` (i.e, **`maturin develop -r`**) to speed up the code.
 
 ## Training
 
 Our LZ78-based classifier optimizes several hyperparameters that impact DNA classification accuracy. Six key hyperparameters were considered, including the Dirichlet parameter, context inclusion, number of epochs, unlabeled-to-labeled data ratio, prediction heuristic, and nucleotide placeholder handling. To efficiently explore hyperparameter combinations, we conducted a Hyperparameter Exploration Study to determine reasonable value ranges while maintaining computational efficiency. Although we suggest hyperparameter values that we found to be effective, the hyperparameter values used for the training sweep can be configured by the user. Note that for our final results we ran a minimal sweep that consists of hyperparametrs we deemed important and kept the others constant, which are highlighted in green in the figure. The minimal sweep was used as a way to decrease our training time. The final model selection follows a conventional AI framework, where classifiers are pre-trained, trained, validated, and the best-performing model is used for test data classification.
 
 <p align="center">
-    <img src="imgs/hyperparam_study_new.png" alt="Description" width="600">
+    <img src="imgs/hyperparamstudy_new.png" alt="Description" width="600">
 </p>
 
 <p align="center">
@@ -52,7 +51,7 @@ Outputs:
 
 ```sh
 # Example Usage of Train.py
-python Train.py -dataset_folder GUE/mouse/0 -pretrain_file dnabert_2_pretrain/dev.txt --include_prev_context "{True, False}" --gamma "{0.1, 0.33, 0.5, 0.75, 1, 3, 5}" --nb_train_iterations "{1, 3, 5, 7, 10}" --ratio_pretrain_train "{0, 0.01, 0.1, 0.25}" --handle_n_setting "{remove}" > output_mouse0.txt 2>&1
+python Train.py -dataset_folder "$DATASET_FOLDER" -pretrain_file "$PRETRAIN_FILE" --include_prev_context "{False}" --gamma "{0.1, 0.33, 0.5, 0.75, 1, 3, 5}" --nb_train_iterations "{1, 3, 5, 7, 10}" --ratio_pretrain_train "{0}"\ --handle_n_setting "{remove}" --ensemble_type "{entropy}" --num_threads "{64}" > "$OUTPUT_DIR/$OUTPUT_FILE"
 ```
 
 
