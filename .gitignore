@@ -3,8 +3,6 @@ target/
 
 GenerateTables.py
 
-eugenecm_train.sh
-
 accuracy_diff.csv
 
 Hyperparameter_plots

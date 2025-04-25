@@ -19,8 +19,7 @@ OUTPUTS:
 
 EXAMPLE USAGE:
 
-python Train.py -dataset_folder GUE/mouse/0 -pretrain_file dnabert_2_pretrain/dev.txt --include_prev_context "{True, False}" --gamma "{0.1, 0.33, 0.5, 0.75, 1, 3, 5}" --nb_train_iterations "{1, 3, 5, 7, 10}" --ratio_pretrain_train "{0, 0.01, 0.1, 0.25}" --handle_n_setting "{remove}" > output_mouse0.txt 2>&1
-
+python Train.py -dataset_folder "$DATASET_FOLDER" -pretrain_file "$PRETRAIN_FILE" --include_prev_context "{False}" --gamma "{0.1, 0.33, 0.5, 0.75, 1, 3, 5}" --nb_train_iterations "{1, 3, 5, 7, 10}" --ratio_pretrain_train "{0}"\ --handle_n_setting "{remove}" --ensemble_type "{entropy}" --num_threads "{64}" > "$OUTPUT_DIR/$OUTPUT_FILE"
 '''
 
 from lz78 import Sequence, LZ78Encoder, CharacterMap, BlockLZ78Encoder, LZ78SPA
@@ -84,7 +83,7 @@ def parse_bool(input_str):
     # Trim and convert to appropriate types
     return {item.strip() == "True" for item in items}
 
-
+#Pretraining the spa routine
 def pretrain_spa(seq, spa: list[LZ78SPA], nb_pretrain_symbols):
     global INCLUDE_PREV_CONTEXT
     if nb_pretrain_symbols == 0:
@@ -130,7 +129,6 @@ def train_spa_oneIter(data, spa):
             spa[label].reset_state()
         spa[label].train_on_block(encoded_seq)
         
-        # Append the computed log-loss to the appropriate label's list
     return logloss_per_label
 
 def train_spa(data, spa, iterations):
@@ -149,38 +147,7 @@ def train_spa(data, spa, iterations):
                 spa[label].reset_state()
             spa[label].train_on_block(encoded_seq)
             
-            # Append the computed log-loss to the appropriate label's list
     return logloss_per_label
-
-# def test_seq (data, spa, num_threads = 32):
-#     # for every test seq,
-#     # run it through all spas
-#     # classification = label associated with lowest loss spa
-#     # check classification against ground truth
-#     # compute accuracy (of all test runs)
-#     best_accuracy = 0
-#     nb_correct = 0
-#     nb_test_total = 0
-#     for row in data.itertuples():
-#         seq = row[1]
-#         correct_label = row[2]
-#         encoded_seq = Sequence(seq, charmap=CharacterMap("ACGT"))
-#         seq_len = len(seq)
-#         nb_test_total += 1
-#         spa_logloss = []
-#         for index in range(len(spa)):
-#             spa_logloss.append(spa[index].compute_test_loss(encoded_seq, include_prev_context=False) / seq_len)
-
-#         predicted_label = spa_logloss.index(min(spa_logloss))
-        
-#         if predicted_label == correct_label:
-#             nb_correct += 1 
-        
-#         accuracy = nb_correct / nb_test_total 
-
-#         if accuracy > best_accuracy:
-#             best_accuracy = accuracy
-#     return best_accuracy
 
 def test_seq (data: pd.DataFrame, spas: list[LZ78SPA], n_threads=32):
     # for every test seq,
@@ -196,6 +163,7 @@ def test_seq (data: pd.DataFrame, spas: list[LZ78SPA], n_threads=32):
     classes = np.argmin(log_losses, axis=0)
     return (classes == labels).sum() / len(labels)
 
+#Processes a sequence for its placeholders
 def process_sequence(sequence, setting="remove", n=10):
     if setting == "remove":
         # Remove all characters that are not A, C, G, or T
@@ -215,6 +183,7 @@ def process_sequence(sequence, setting="remove", n=10):
     else:
         raise ValueError("Setting must be 'remove', 'random', or 'expand'.")
 
+#Handles the placeholder "N"s in a sequence
 def handle_N(data, setting="remove"):
     new_data = []
     for _, row in data.iterrows():
@@ -301,9 +270,11 @@ def main(dataset_folder, pretrain_file):
                 backshift_break_at_phrase=True
             )
 
+        #Pretrain spas
         nb_pretrain_symbols = math.ceil(RATIO_PRETRAIN_TRAIN * nb_train_symbols)
         pretrain_spa(pretrain_data, spa, nb_pretrain_symbols) 
 
+        #Train spas iteratively with more data while testing the other hyperparameters
         iterated_times = 0
         for nb_iterations in nb_train_iterations:
             train_one_iter_start_time = time.perf_counter()
@@ -348,7 +319,6 @@ def main(dataset_folder, pretrain_file):
     best_params = best_row.to_dict()
     print("Best hyperparameters:", best_params)
 
-    # Retrain and test using the best hyperparameters
     INCLUDE_PREV_CONTEXT = best_params["INCLUDE_PREV_CONTEXT"]
     GAMMA = best_params["GAMMA"]
     NB_TRAIN_ITERATIONS = int(best_params["NB_TRAIN_ITERATIONS"])
@@ -399,6 +369,7 @@ def main(dataset_folder, pretrain_file):
         
     inference_duration = inference_end_time - inference_start_time
 
+    #Save all spas
     label = 0
     for sp in spa:
         spa_bytes = bytearray(sp.to_bytes())
@@ -408,30 +379,31 @@ def main(dataset_folder, pretrain_file):
         binary_file_name = dataset_folder.split("GUE/", 1)[-1].replace("/", "_")
         
         # Create the full path for the binary file
-        binary_file_path = os.path.join("best_spas/minimal", f"{binary_file_name}_{label}.bin")
+        binary_file_path = os.path.join("best_spas/", f"{binary_file_name}_{label}.bin")
         label += 1
         # Save the binary file
         with open(binary_file_path, 'wb') as file:
             file.write(spa_bytes)
     
-
+    #Output all measured times
     print("-----TIME PROFILING+")
     print(f"Read train + val data time: {(train_start_time - read_data_in_time): .5f}")
     print(f"Number of training symbols: {nb_train_symbols}")
     print(f"Length of one training sequence: {len(train_data.iloc[0, 0])}")
     print(f"Total training time: {train_duration:.3f} seconds")
     
-
     print(f"Number of test sequences: {len(test_data)}")
     print(f"Length of test sequence: {len(test_data.iloc[0, 0])}")
     print(f"Read test data time: {(inference_start_time - read_test_data_start_time): .5f}")
     print(f"Total inference time: {inference_duration:.3f} seconds")
     print(f"Inference time/symbol: {inference_duration/(len(test_data) * len(test_data.iloc[0, 0]))} seconds")
 
+    #Output memory report, which is automatically printed at the end of the run
     print("-----MEMORY REPORT")
 
 if __name__ == "__main__":
 
+    #Parse all arguments
     parser = argparse.ArgumentParser(description="Script for training and testing SPA model")
 
     parser.add_argument("-dataset_folder", type=str, required=True, help="Path to the dataset folder")

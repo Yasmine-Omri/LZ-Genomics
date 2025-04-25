@@ -32,7 +32,7 @@ Our LZ78-based classifier optimizes several hyperparameters that impact DNA clas
 </p>
 
 The Train.py script is used to run the pre-train, train, validate, test framework for the LZ78-based classifier for a given dataset.
-The framework is highly configurable and outputs a detailed report including accuracy numbers and time/memory profiling.
+The framework is highly configurable and outputs a detailed report including accuracy numbers and time/memory profiling. train.sh can be used as a reference to run the script. 
 
 Inputs:
 - Labeled dataset path
