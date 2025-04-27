@@ -2,7 +2,7 @@
 
 # Define the pretrain file and dataset folders with their associated output files
 PRETRAIN_FILE="./dnabert_2_pretrain/dev.txt"
-OUTPUT_DIR="./outputs_minimal"
+OUTPUT_DIR="./minimal_train_reports"
 
    
 # Define the dataset folders and their respective output files
@@ -57,8 +57,6 @@ for DATASET_FOLDER in "${!DATASET_OUTPUTS[@]}"; do
     --gamma \"{0.1, 0.33, 0.5, 0.75, 1, 3, 5}\" --nb_train_iterations \"{1, 3, 5, 7, 10}\" --ratio_pretrain_train \"{0}\"\
     --handle_n_setting \"{remove}\" --ensemble_type \"{entropy}\" --num_threads \"{48}\" > \"$OUTPUT_DIR/$OUTPUT_FILE\""
 
-    # Run the python script in the background
-    #python3 explore.py -dataset_folder "$DATASET_FOLDER" -pretrain_file "$PRETRAIN_FILE" > "$OUTPUT_DIR/$OUTPUT_FILE" &
     python Train.py -dataset_folder "$DATASET_FOLDER" -pretrain_file "$PRETRAIN_FILE" --include_prev_context "{False}" \
     --gamma "{0.1, 0.33, 0.5, 0.75, 1, 3, 5}" --nb_train_iterations "{1, 3, 5, 7, 10}" --ratio_pretrain_train "{0}"\
     --handle_n_setting "{remove}" --ensemble_type "{entropy}" --num_threads "{1}" > "$OUTPUT_DIR/$OUTPUT_FILE"

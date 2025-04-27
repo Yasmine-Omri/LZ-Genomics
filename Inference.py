@@ -4,7 +4,7 @@ The script can be easily modified to perform inference on a single sequence.
 
 EXAMPLE USAGE:
 
-python Inference.py --spas best_spas/mouse_0 --dataset_test_csv GUE/mouse/0/test.csv --nb_classes 2
+python Inference.py --spas Trained_SPAs(minimal)/mouse_0 --dataset_test_csv GUE/mouse/0/test.csv --nb_classes 2
 
 '''
 
@@ -59,7 +59,7 @@ def main():
 
     spa = classifier_from_files([f"{dataset}_{i}.bin" for i in range(nb_classes)])
 
-    # Load only the specific row (e.g., row index 0)
+    # Load test data for the dataset
     test_path = dataset_test_csv
     test_data = pd.read_csv(test_path)
     for i in range(len(test_data)):
