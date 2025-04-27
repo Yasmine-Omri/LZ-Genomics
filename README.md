@@ -54,7 +54,8 @@ Outputs:
 python Train.py -dataset_folder "$DATASET_FOLDER" -pretrain_file "$PRETRAIN_FILE" --include_prev_context "{False}" --gamma "{0.1, 0.33, 0.5, 0.75, 1, 3, 5}" --nb_train_iterations "{1, 3, 5, 7, 10}" --ratio_pretrain_train "{0}"\ --handle_n_setting "{remove}" --ensemble_type "{entropy}" --num_threads "{64}" > "$OUTPUT_DIR/$OUTPUT_FILE"
 ```
 
-
+## Trained Models
+Our trained SPAs from both the minimal training mode and full training mode can be found [here](https://drive.google.com/drive/folders/1AbvoJg9eHefOAGDkK88nhRYvy80E7hBx?usp=sharing). In order to run inference, simply unzip the relevant folder and update the directory path in the Inference command.
 
 ## Inference
 The Inference.py script uses trained SPAs to perform inference on a test dataset and report test accuracy.
