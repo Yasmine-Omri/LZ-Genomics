@@ -10,24 +10,20 @@ INPUTS:
 
 OUTPUTS:
 - Detailed printed report including: 
-    * Validation accuracy for each combination of hyperparameters tested
-    * Hyperparameter Combination producing the highest validation accuracy
-    * Test accuracy (on test dataset) of the best SPAs
+    * VALIDATION METRIC for each combination of hyperparameters tested
+    * Hyperparameter Combination producing the highest VALIDATION METRIC
+    * Test metric (on test dataset) of the best SPAs
     * Depth of the trees corresponding to the best SPAs
     * Computational metrics
-- Best SPAs (highest validation accuracy) saved as .bin files to be used for inference or further analysis.
+- Best SPAs (highest VALIDATION METRIC) saved as .bin files to be used for inference or further analysis.
 
 EXAMPLE USAGE:
 
 python Train.py -dataset_folder "$DATASET_FOLDER" -pretrain_file "$PRETRAIN_FILE" --include_prev_context "{False}" --gamma "{0.1, 0.33, 0.5, 0.75, 1, 3, 5}" --nb_train_iterations "{1, 3, 5, 7, 10}" --ratio_pretrain_train "{0}"\ --handle_n_setting "{remove}" --ensemble_type "{entropy}" --num_threads "{64}" > "$OUTPUT_DIR/$OUTPUT_FILE"
 '''
 
-from lz78 import Sequence, LZ78Encoder, CharacterMap, BlockLZ78Encoder, LZ78SPA
-from lz78 import encoded_sequence_from_bytes, spa_from_bytes
+from lz78 import Sequence, CharacterMap, LZ78SPA
 import numpy as np
-import lorem
-import requests
-from sys import stdout
 from os import makedirs
 import time
 import pandas as pd
@@ -50,7 +46,6 @@ HANDLE_N_SETTING = None
 RATIO_PRETRAIN_TRAIN = None # nb of pretrained sequences / nb train sequences
 ENSEMBLE_TYPE = None
 NUM_THREADS = None
-
 
 import argparse
 
@@ -149,19 +144,30 @@ def train_spa(data, spa, iterations):
             
     return logloss_per_label
 
-def test_seq (data: pd.DataFrame, spas: list[LZ78SPA], n_threads=32):
+def test_seq (data: pd.DataFrame, spas: list[LZ78SPA], metric, n_threads=32):
     # for every test seq,
     # run it through all spas
     # classification = label associated with lowest loss spa
     # check classification against ground truth
-    # compute accuracy (of all test runs)
+    # compute metric (of all test runs)
     labels = data["label"]
     data = [Sequence(seq, charmap=CharacterMap("ACGT")) for seq in data["sequence"]]
     log_losses = np.zeros((len(spas), len(data)))
     for i in range(len(spas)):
         log_losses[i, :] = [res["avg_log_loss"] for res in spas[i].compute_test_loss_parallel(data, num_threads=n_threads)]
     classes = np.argmin(log_losses, axis=0)
-    return (classes == labels).sum() / len(labels)
+
+    if metric == "accuracy":    
+        return (classes == labels).sum() / len(labels)
+    if metric == "mcc":
+        from sklearn.metrics import matthews_corrcoef
+        return matthews_corrcoef(labels, classes)
+    if metric == "f1":
+        from sklearn.metrics import f1_score
+        return f1_score(labels, classes, average='weighted')
+    else:
+        raise ValueError("Invalid metric specified. Choose from 'accuracy', 'mcc', or 'f1'.")
+
 
 #Processes a sequence for its placeholders
 def process_sequence(sequence, setting="remove", n=10):
@@ -196,7 +202,7 @@ def handle_N(data, setting="remove"):
     return pd.DataFrame(new_data)
 
 @profile
-def main(dataset_folder, pretrain_file):
+def main(dataset_folder, pretrain_file, metric):
     global INCLUDE_PREV_CONTEXT
     global GAMMA
     global NB_TRAIN_ITERATIONS 
@@ -234,12 +240,12 @@ def main(dataset_folder, pretrain_file):
     # Test all on validation set, return best SPA
     results_df = pd.DataFrame(columns=[
     "INCLUDE_PREV_CONTEXT", "GAMMA", "NB_TRAIN_ITERATIONS", 
-    "HANDLE_N_SETTING", "RATIO_PRETRAIN_TRAIN", "ENSEMBLE_TYPE", "NUM_THREADS", "VALIDATION ACCURACY"
+    "HANDLE_N_SETTING", "RATIO_PRETRAIN_TRAIN", "ENSEMBLE_TYPE", "NUM_THREADS", "VALIDATION METRIC"
     ])
 
     print("-----TRAINING")
     print("---SEARCH FOR BEST SPA(s)")
-    print("nb_iterations , gamma, include_prev_context, handle_N_setting, ratio, ensemble type, num_threads, time taken, accuracy", flush=True)
+    print(f"nb_iterations , gamma, include_prev_context, handle_N_setting, ratio, ensemble type, num_threads, time taken, {metric}", flush=True)
     train_start_time = time.perf_counter()
     for include_prev_context, handle_N_setting, ratio in itertools.product(
         include_prev_contexts, handle_N_settings, ratio_pretrain_train
@@ -287,10 +293,10 @@ def main(dataset_folder, pretrain_file):
                 # Test on validation test to assess this combination of hyperparams
                     for index in range(len(spa)):
                         spa[index].set_inference_config(gamma=gamma, ensemble_type=ensemble)
-                    accuracy = test_seq(validation_data, spa, num_threads)
+                    val_metric = test_seq(validation_data, spa, metric=metric, n_threads=NUM_THREADS)
                     train_one_iter_end_time = time.perf_counter()
                     train_one_iter_duration = train_one_iter_end_time - train_one_iter_start_time
-                    print(f"{nb_iterations}, {gamma}, {include_prev_context}, {handle_N_setting}, {ratio}, {ensemble}, {NUM_THREADS}, {train_one_iter_duration:.3f}, {(accuracy * 100):.2f}", flush=True)
+                    print(f"{nb_iterations}, {gamma}, {include_prev_context}, {handle_N_setting}, {ratio}, {ensemble}, {NUM_THREADS}, {train_one_iter_duration:.3f}, {(val_metric * 100):.2f}", flush=True)
 
                 
                 
@@ -303,7 +309,7 @@ def main(dataset_folder, pretrain_file):
                         "ENSEMBLE_TYPE": ensemble,
                         "NUM_THREADS": NUM_THREADS,
                         "TRAINING_TIME": train_one_iter_duration, 
-                        "VALIDATION ACCURACY": accuracy
+                        "VALIDATION METRIC": val_metric
                     }])
 
                 # Concatenate the current result with results_df
@@ -313,9 +319,9 @@ def main(dataset_folder, pretrain_file):
                 results_df = pd.concat([results_df, current_result], ignore_index=True)
 
     
-    # Find the best hyperparameter combination based on the highest accuracy
+    # Find the best hyperparameter combination based on the highest validation metric
     print("---BEST SPA(s) FOUND")
-    best_row = results_df.loc[results_df['VALIDATION ACCURACY'].idxmax()]
+    best_row = results_df.loc[results_df['VALIDATION METRIC'].idxmax()]
     best_params = best_row.to_dict()
     print("Best hyperparameters:", best_params)
 
@@ -361,10 +367,10 @@ def main(dataset_folder, pretrain_file):
     inference_start_time = time.perf_counter()
 
     test_data = handle_N(test_data)
-    test_accuracy = test_seq(test_data, spa, NUM_THREADS)
+    test_metric = test_seq(test_data, spa, metric=metric, n_threads=NUM_THREADS)
 
     inference_end_time = time.perf_counter()
-    print(f"Final accuracy with best hyperparameters: {(test_accuracy*100):.2f}")
+    print(f"Final metric with best hyperparameters: {(test_metric*100):.2f}")
     
         
     inference_duration = inference_end_time - inference_start_time
@@ -422,6 +428,9 @@ if __name__ == "__main__":
                         help="Set of values for ENSEMBLE_TYPE e.g., '{depth,entropy}'")
     parser.add_argument("--num_threads", type=str, required=True,
                         help="Number of threads to compute on in parallel'")
+    parser.add_argument("--validation_metric", type=str, default="accuracy",
+                        choices=["accuracy", "mcc", "f1"],
+                        help="Metric to use for validation, default is 'accuracy'")
     args = parser.parse_args()
 
     # Convert string inputs to Python sets
@@ -442,6 +451,6 @@ if __name__ == "__main__":
     num_threads = parse_set(args.num_threads)
     num_threads = int(list(num_threads)[0])
 
-    main(args.dataset_folder, args.pretrain_file)
+    main(args.dataset_folder, args.pretrain_file, args.validation_metric)
 
     

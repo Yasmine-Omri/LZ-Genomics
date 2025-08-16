@@ -16,3 +16,4 @@ test.ipynb
 Train_nsagan.py
 
 TrainOutputToCSV.py
+results/
