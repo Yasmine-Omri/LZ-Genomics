@@ -33,7 +33,7 @@ import math
 import itertools
 from memory_profiler import profile
 import os
-
+from ushuffle import shuffle, Shuffler
 
 
 # Training hyperparameters:
@@ -46,6 +46,7 @@ HANDLE_N_SETTING = None
 RATIO_PRETRAIN_TRAIN = None # nb of pretrained sequences / nb train sequences
 ENSEMBLE_TYPE = None
 NUM_THREADS = None
+MAX_DEPTHS = None
 
 import argparse
 
@@ -218,6 +219,9 @@ def main(dataset_folder, pretrain_file, metric):
     global ratio_pretrain_train
     global ensemble_type
     global num_threads
+    global augmentation_factors
+    global preserve_kmer
+    global max_depth
 
     read_data_in_time = time.perf_counter()
     
@@ -245,10 +249,10 @@ def main(dataset_folder, pretrain_file, metric):
 
     print("-----TRAINING")
     print("---SEARCH FOR BEST SPA(s)")
-    print(f"nb_iterations , gamma, include_prev_context, handle_N_setting, ratio, ensemble type, num_threads, time taken, {metric}", flush=True)
+    print(f"nb_iterations, aug_factor, gamma, include_prev_context, handle_N_setting, ratio, ensemble_type, max_depth, num_threads, time taken, {metric}", flush=True)
     train_start_time = time.perf_counter()
-    for include_prev_context, handle_N_setting, ratio in itertools.product(
-        include_prev_contexts, handle_N_settings, ratio_pretrain_train
+    for include_prev_context, handle_N_setting, ratio, aug_factor, max_depth in itertools.product(
+        include_prev_contexts, handle_N_settings, ratio_pretrain_train, augmentation_factors, max_depth
     ):  
         INCLUDE_PREV_CONTEXT = include_prev_context
         GAMMA = gammas
@@ -257,15 +261,37 @@ def main(dataset_folder, pretrain_file, metric):
         RATIO_PRETRAIN_TRAIN = ratio 
         ENSEMBLE_TYPE = ensemble_type
         NUM_THREADS = num_threads
-        
+        MAX_DEPTH = max_depth
+
+        old_train_data = train_data.copy()
+
         train_data = handle_N(train_data, setting=HANDLE_N_SETTING)
-        validation_data = handle_N(validation_data)
+        validation_data = handle_N(validation_data, setting=HANDLE_N_SETTING)
+
+        # Augment training data with shuffled positive sequences
+        pos_train = train_data[train_data['label'] != 0]
+        new_negatives_train = []
+        for sample in pos_train["sequence"]:
+            sample = sample.lower().encode('utf-8')
+            shuffler = Shuffler(sample, preserve_kmer)
+            if aug_factor < 1:
+                if random.random() < aug_factor:
+                    # print("bye", shuffler.shuffle())
+                    new_negatives_train.append([shuffler.shuffle().decode('utf-8').upper(), 0])
+                continue
+            for _ in range(int(aug_factor)):
+                new_negatives_train.append([shuffler.shuffle().decode('utf-8').upper(), 0])
+        train_data = pd.concat(
+            [train_data, pd.DataFrame(new_negatives_train, columns=['sequence', 'label'])],
+            ignore_index=True
+        )
+
         nb_train_seqs = len(train_data)
         seq_len = len(train_data.iloc[0, 0])
         nb_train_symbols = nb_train_seqs * seq_len
         
         # Create list of spas based on number of labels: (spa_0 and spa_1 for labels 0, 1)
-        spa = [LZ78SPA(alphabet_size=ALPHABET_SIZE, compute_training_loss=False) for _ in unique_labels]
+        spa = [LZ78SPA(alphabet_size=ALPHABET_SIZE, compute_training_loss=False, max_depth=int(MAX_DEPTH) if MAX_DEPTH else None) for _ in unique_labels]
         for i in range(len(unique_labels)):
             spa[i].set_inference_config(
                 lb=1e-5,
@@ -296,9 +322,8 @@ def main(dataset_folder, pretrain_file, metric):
                     val_metric = test_seq(validation_data, spa, metric=metric, n_threads=NUM_THREADS)
                     train_one_iter_end_time = time.perf_counter()
                     train_one_iter_duration = train_one_iter_end_time - train_one_iter_start_time
-                    print(f"{nb_iterations}, {gamma}, {include_prev_context}, {handle_N_setting}, {ratio}, {ensemble}, {NUM_THREADS}, {train_one_iter_duration:.3f}, {(val_metric * 100):.2f}", flush=True)
+                    print(f"{nb_iterations}, {aug_factor}, {gamma}, {include_prev_context}, {handle_N_setting}, {ratio}, {ensemble}, {max_depth}, {NUM_THREADS}, {train_one_iter_duration:.3f}, {(val_metric * 100):.2f}", flush=True)
 
-                
                 
                     current_result = pd.DataFrame([{
                         "INCLUDE_PREV_CONTEXT": INCLUDE_PREV_CONTEXT,
@@ -307,9 +332,11 @@ def main(dataset_folder, pretrain_file, metric):
                         "HANDLE_N_SETTING": HANDLE_N_SETTING,
                         "RATIO_PRETRAIN_TRAIN": RATIO_PRETRAIN_TRAIN,
                         "ENSEMBLE_TYPE": ensemble,
+                        "MAX_DEPTH": MAX_DEPTH if MAX_DEPTH else 0,
                         "NUM_THREADS": NUM_THREADS,
                         "TRAINING_TIME": train_one_iter_duration, 
-                        "VALIDATION METRIC": val_metric
+                        "VALIDATION METRIC": val_metric,
+                        "AUGMENTATION_FACTOR": aug_factor,
                     }])
 
                 # Concatenate the current result with results_df
@@ -317,7 +344,7 @@ def main(dataset_folder, pretrain_file, metric):
                 current_result = current_result.dropna(axis=1, how='all')
 
                 results_df = pd.concat([results_df, current_result], ignore_index=True)
-
+        train_data = old_train_data.copy()  # Reset train_data to original state after each hyperparameter combination
     
     # Find the best hyperparameter combination based on the highest validation metric
     print("---BEST SPA(s) FOUND")
@@ -332,9 +359,12 @@ def main(dataset_folder, pretrain_file, metric):
     RATIO_PRETRAIN_TRAIN = best_params["RATIO_PRETRAIN_TRAIN"]
     ENSEMBLE_TYPE = best_params["ENSEMBLE_TYPE"]
     NUM_THREADS = best_params["NUM_THREADS"]
+    MAX_DEPTH = int(best_params["MAX_DEPTH"])
+    if MAX_DEPTH == 0:
+        MAX_DEPTH = None
 
     # Retrain our best SPAs and use that to test on test data 
-    spa = [LZ78SPA(alphabet_size=ALPHABET_SIZE, gamma= GAMMA, compute_training_loss=False) for _ in unique_labels]
+    spa = [LZ78SPA(alphabet_size=ALPHABET_SIZE, gamma= GAMMA, compute_training_loss=False, max_depth=MAX_DEPTH) for _ in unique_labels]
     for i in range(len(unique_labels)):
         spa[i].set_inference_config(
             lb=1e-5,
@@ -431,6 +461,14 @@ if __name__ == "__main__":
     parser.add_argument("--validation_metric", type=str, default="accuracy",
                         choices=["accuracy", "mcc", "f1"],
                         help="Metric to use for validation, default is 'accuracy'")
+    parser.add_argument("--augmentation_factors", type=str, required=False, default="{0}",
+                        help=("Set of augmentation factors for adding shuffled versions of the positive "
+                        "sequences to the negative training examples, e.g., '{0, 0.5, 1}'"
+                        ))
+    parser.add_argument("--shuffle_preserve_kmer", type=int, default=2,
+                        help="Preserve k-mer frequncies when shuffling sequences")
+    parser.add_argument("--max_depth", type=str, required=False, default="{}",
+                        help="Set of max depths for the LZ78 tree, e.g., {4, 8, 12}., tried in addition to not limiting the depth. Defaults to empty ")
     args = parser.parse_args()
 
     # Convert string inputs to Python sets
@@ -448,8 +486,14 @@ if __name__ == "__main__":
 
     ensemble_type = parse_set(args.ensemble_type)
 
+    augmentation_factors = parse_set(args.augmentation_factors)
+    preserve_kmer = args.shuffle_preserve_kmer
+    print(f"Preserving k-mer frequencies: {preserve_kmer}")
+
     num_threads = parse_set(args.num_threads)
     num_threads = int(list(num_threads)[0])
+
+    max_depth = [None] + [int(x) for x in list(parse_set(args.max_depth))]
 
     main(args.dataset_folder, args.pretrain_file, args.validation_metric)
 
