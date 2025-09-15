@@ -1,0 +1,15 @@
+----- PRETRAIN SUMMARY -----
+Pretrain file            : /Users/yasmineomri/Documents/EE376C/lz78_rust/repo/fresh_repo/LZ-Genomics/benchmarks/DART-EVAL/data/pretrain_data/small_dev_debug.txt
+Byte limit (requested)   : 5368709120 bytes (5GB)
+Bytes actually consumed  : 100100000 bytes
+Max depth                : 16
+Include prev context     : False
+N handling               : remove
+Output path              : best_spas/pretrain_file_5GB.bin
+----- TIME PROFILING -----
+Total pretrain time      : 10.986 s
+Throughput               : 9.11 MB/s
+----- MEMORY PROFILING -----
+SPA size on disk         : 254.83 MiB
+Peak RSS (OS-reported)   : 1460.48 MiB
+Peak tracemalloc         : 815.30 MiB
