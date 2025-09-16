@@ -86,6 +86,8 @@ def predict_scores(data: pd.DataFrame, spas: list[LZ78SPA], n_threads=32):
 
 def paired_accuracy(csv_with_pair_id_path, spas, n_threads=32):
     df = pd.read_csv(csv_with_pair_id_path)
+    df = handle_N(df)
+
     scores = predict_scores(df, spas, n_threads)
     df = df.assign(score=scores)
     wins = 0; total = 0
@@ -299,7 +301,7 @@ def main(dataset_folder, pretrain_file):
         NUM_THREADS = num_threads
         
         train_data = handle_N(train_data, setting=HANDLE_N_SETTING)
-        validation_data = handle_N(validation_data)
+        validation_data = handle_N(validation_data, setting=HANDLE_N_SETTING)
         nb_train_seqs = len(train_data)
         seq_len = len(train_data.iloc[0, 0])
         nb_train_symbols = nb_train_seqs * seq_len

@@ -192,9 +192,13 @@ def features_for_pair(cfg: LZConfig, E: str, P: str) -> Tuple[float, float, floa
 
     # Self complexities (avg bits/base)
     spaE = build_spa(cfg)
+    spaE.train_on_block(seq_obj(E))   # learn E
+    spaE.reset_state()                # boundary (do NOT clear dictionary)
     c_E = avg_loss_on_seq(spaE, E)
 
     spaP = build_spa(cfg)
+    spaP.train_on_block(seq_obj(P))   # learn E
+    spaP.reset_state()                # boundary (do NOT clear dictionary)
     c_P = avg_loss_on_seq(spaP, P)
 
     # Directed cross-entropies (avg bits/base):
