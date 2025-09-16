@@ -19,7 +19,7 @@ import argparse, os, math, shutil, subprocess, tempfile, itertools, time, random
 from collections import Counter
 import pandas as pd
 from memory_profiler import profile
-from sklearn.metrics import f1_score
+from sklearn.metrics import f1_score, matthews_corrcoef
 
 ALPHABET = "ACGT"
 
@@ -199,10 +199,10 @@ def write_fasta_from_sequences(seq_iterable, out_path):
         for i, s in enumerate(seq_iterable):
             fh.write(f">bg_{i}\n{s}\n")
 
-def collect_pretrain_sequences(pretrain_fasta, pretrain_csv, csv_col=None,
+def collect_pretrain_sequences(pretrain_csv, csv_col=None,
                                chunk_len: int = 0, chunk_stride: int = 0):
     """
-    Yield sequences from FASTA or CSV.
+    Yield sequences from CSV.
     - FASTA: streams records, optionally chunked
     - CSV: uses csv_col if provided; else auto-detect string-like column; optionally chunk if single long row
     """
@@ -216,25 +216,6 @@ def collect_pretrain_sequences(pretrain_fasta, pretrain_csv, csv_col=None,
             return
         for i in range(0, L - chunk_len + 1, stride):
             yield seq[i:i+chunk_len]
-
-    if pretrain_fasta:
-        seq = []
-        with open(pretrain_fasta, "r") as fh:
-            for line in fh:
-                line = line.strip()
-                if not line:
-                    continue
-                if line.startswith(">"):
-                    if seq:
-                        full = "".join(seq).upper()
-                        for ch in _yield_chunks(full): yield ch
-                        seq = []
-                else:
-                    seq.append(line)
-            if seq:
-                full = "".join(seq).upper()
-                for ch in _yield_chunks(full): yield ch
-        return
 
     if pretrain_csv:
         df = pd.read_csv(pretrain_csv)
@@ -407,23 +388,8 @@ def accuracy(y_true, y_pred):
     return ok/len(y_true) if y_true else 0.0
 
 def mcc_multiclass(y_true, y_pred):
-    """Matthews correlation coefficient (binary or multi-class)."""
-    labels = sorted(set(map(int, y_true)) | set(map(int, y_pred)))
-    idx = {lab:i for i,lab in enumerate(labels)}
-    K = len(labels)
-    C = [[0]*K for _ in range(K)]
-    for yt, yp in zip(y_true, y_pred):
-        C[idx[int(yt)]][idx[int(yp)]] += 1
-    t_k = [sum(row) for row in C]
-    p_k = [sum(C[i][k] for i in range(K)) for k in range(K)]
-    c = sum(C[k][k] for k in range(K))
-    s = sum(t_k)
-    sum_tk_pk = sum(t_k[i]*p_k[i] for i in range(K))
-    num = (c * s) - sum_tk_pk
-    den1 = (s*s) - sum(pk*pk for pk in p_k)
-    den2 = (s*s) - sum(tk*tk for tk in t_k)
-    den = math.sqrt(den1 * den2) if den1 > 0 and den2 > 0 else 0.0
-    return num/den if den else 0.0
+    # scikit-learn’s MCC supports binary and multiclass natively
+    return matthews_corrcoef(list(map(int, y_true)), list(map(int, y_pred)))
 
 # ================================== main ==================================
 @profile
@@ -444,7 +410,6 @@ def main():
     # empirical background prior
     ap.add_argument("--use_empirical_prior", default="auto",
                     help="auto|True|False. If auto and pretrain provided, use prior; if True, require pretrain; if False, disable.")
-    ap.add_argument("--pretrain_fasta", default=None, help="Path to unlabeled DNA FASTA (optional).")
     ap.add_argument("--pretrain_csv", default=None, help="Path to unlabeled CSV with a sequence column (optional).")
     ap.add_argument("--pretrain_csv_col", default=None, help="CSV column name containing sequences.")
     ap.add_argument("--pretrain_chunk_len", type=int, default=0,
@@ -469,9 +434,6 @@ def main():
 
     args = ap.parse_args()
 
-    # -------- timing: start of data read (to mirror Train.py) --------
-    read_data_in_time = time.perf_counter()
-
     # parse lists
     ks = sorted(int(x) for x in parse_list(args.ks))
     alphas = sorted(float(x) for x in parse_list(args.alphas))
@@ -480,38 +442,34 @@ def main():
     use_canonical = (parse_list(args.canonical)[0] if parse_list(args.canonical) else True)
     select_by = args.select_by.lower()
 
-
     dataset_name = os.path.basename(os.path.normpath(args.dataset_folder)).lower()
 
     # empirical prior mode
     use_empirical = str(args.use_empirical_prior).lower()
     if use_empirical not in ("auto","true","false"):
         raise ValueError("--use_empirical_prior must be auto|True|False")
-    have_pretrain = bool(args.pretrain_fasta or args.pretrain_csv)
+    have_pretrain = bool(args.pretrain_csv)
     if use_empirical == "auto":
         use_empirical = "true" if have_pretrain else "false"
     if use_empirical == "true" and not have_pretrain:
-        raise ValueError("--use_empirical_prior True was set but no --pretrain_fasta/--pretrain_csv provided.")
+        raise ValueError("--use_empirical_prior True was set but no --pretrain_csv provided.")
+
+    read_data_in_time = time.perf_counter()
 
     # load splits
     dpath = args.dataset_folder
     train_path = os.path.join(dpath, "train.csv")
-    test_path  = os.path.join(dpath, "test.csv")
-    verify_path = (os.path.join(dpath, "verify.csv")
-                   if os.path.exists(os.path.join(dpath, "verify.csv"))
-                   else os.path.join(dpath, "dev.csv") if os.path.exists(os.path.join(dpath, "dev.csv")) else None)
+    val_path  = os.path.join(dpath, "dev.csv")
+    test_path = os.path.join(dpath, "test.csv")
 
     train = pd.read_csv(train_path)
-    test  = pd.read_csv(test_path)
-    verify = pd.read_csv(verify_path) if verify_path else None
+    val  = pd.read_csv(val_path)
 
     # N handling (DNA only)
     train = handle_N_df(train, handle_setting)
-    test  = handle_N_df(test, handle_setting)
-    if verify is not None:
-        verify = handle_N_df(verify, handle_setting)
+    val  = handle_N_df(val, handle_setting)
 
-    # -------- training start time (mirrors Train.py) --------
+    # -------- training start time  --------
     print("-----TRAINING")
     train_start_time = time.perf_counter()
 
@@ -535,7 +493,7 @@ def main():
                     def _bg_stream():
                         skipped = 0
                         for s in collect_pretrain_sequences(
-                                args.pretrain_fasta, args.pretrain_csv,
+                                args.pretrain_csv,
                                 args.pretrain_csv_col,
                                 args.pretrain_chunk_len, args.pretrain_chunk_stride):
                             # apply same N policy as train; also ensure DNA content
@@ -601,10 +559,10 @@ def main():
             model.fit_from_counts(class_counts)
             t_train1 = time.perf_counter()
 
-        # TEST evaluation
+        #Validate
         t_test0 = time.perf_counter()
-        y_true = list(test["label"].astype(int).values)
-        y_pred = model.predict_df(test)
+        y_true = list(val["label"].astype(int).values)
+        y_pred = model.predict_df(val)
         acc = accuracy(y_true, y_pred)
         mcc = mcc_multiclass(y_true, y_pred)
         f1 = f1_score(y_true, y_pred, average="macro")
@@ -625,64 +583,51 @@ def main():
 
 
     print("\nBEST ON TEST:", best)
-
-    # VERIFY evaluation
-    if verify is not None and best_model is not None:
-        yv = list(verify["label"].astype(int).values)
-        pv = best_model.predict_df(verify)
-        vacc = accuracy(yv, pv)
-        vmcc = mcc_multiclass(yv, pv)
-        vf1 = f1_score(yv, pv, average="macro")
-        print("VERIFY ACC:", f"{vacc:.4f}")
-        print("VERIFY MCC:", f"{vmcc:.4f}")
-        print("VERIFY F1:",  f"{vf1:.4f}")
-    else:
-        print("No verify/dev split found; skipping VERIFY.")
-
-    # ---------- TIME PROFILING+ ----------
-    print("-----TIME PROFILING+")
-    # Read train + val data time: from initial read start to training start
-    print(f"Read train + val data time: {(train_start_time - read_data_in_time): .5f}")
-
-    # Training symbols & seq length estimate
-    try:
-        nb_train_seqs = len(train)
-        train_seq_len = len(train.iloc[0]["sequence"])
-        nb_train_symbols = nb_train_seqs * train_seq_len
-    except Exception:
-        nb_train_seqs = len(train); train_seq_len = 0; nb_train_symbols = 0
-
+    
     train_end_time = time.perf_counter()
     train_duration = train_end_time - train_start_time
 
+    read_test_data_start_time = time.perf_counter()
+    test = pd.read_csv(test_path) 
+    test = handle_N_df(test, handle_setting)
+    
+    inference_start_time = time.perf_counter()
+
+    # TEST evaluation
+    y_true = list(test["label"].astype(int).values)
+    y_pred = model.predict_df(test)
+    acc = accuracy(y_true, y_pred)
+    mcc = mcc_multiclass(y_true, y_pred)
+    f1 = f1_score(y_true, y_pred, average="macro")
+    print("TEST ACC:", f"{acc:.4f}")
+    print("TEST MCC:", f"{mcc:.4f}")
+    print("TEST F1:",  f"{f1:.4f}")
+ 
+    inference_end_time = time.perf_counter()
+    inference_duration = (inference_end_time - inference_start_time)
+
+    nb_train_seqs = len(train)
+    train_seq_len = len(train.iloc[0]["sequence"])
+    nb_train_symbols = nb_train_seqs * train_seq_len
+
+    nb_test_seqs = len(test)
+    test_seq_len = len(test.iloc[0]["sequence"])
+    # ---------- TIME PROFILING+ ----------
+    print("-----TIME PROFILING+")
+    print(f"Read train + val data time: {(train_start_time - read_data_in_time): .5f}")
     print(f"Number of training symbols: {nb_train_symbols}")
     print(f"Length of one training sequence: {train_seq_len}")
     print(f"Total training time: {train_duration:.3f} seconds")
 
-    # Test timing: emulate Train.py's 'Read test data time'
-    try:
-        nb_test_seqs = len(test)
-        test_seq_len = len(test.iloc[0]["sequence"])
-    except Exception:
-        nb_test_seqs = len(test); test_seq_len = 0
-
-    read_test_data_start_time = time.perf_counter()
-    _ = pd.read_csv(test_path)  # mimic explicit read step
-    inference_start_time = time.perf_counter()
-    if best_model is not None:
-        _ = best_model.predict_df(test)
-    inference_end_time = time.perf_counter()
-
     print(f"Number of test sequences: {nb_test_seqs}")
     print(f"Length of test sequence: {test_seq_len}")
     print(f"Read test data time: {(inference_start_time - read_test_data_start_time): .5f}")
-    inference_duration = (inference_end_time - inference_start_time)
     print(f"Total inference time: {inference_duration:.3f} seconds")
-    den = (nb_test_seqs * test_seq_len) if (nb_test_seqs and test_seq_len) else 0
-    print(f"Inference time/symbol: {inference_duration/den if den else 0.0} seconds")
+    print(f"Inference time/symbol: {inference_duration/(nb_test_seqs * test_seq_len)} seconds")
     # ---------- END TIME PROFILING+ ----------
 
-    print("Done.")
+    #Output memory report, which is automatically printed at the end of the run
+    print("-----MEMORY REPORT")
 
 if __name__ == "__main__":
     main()
