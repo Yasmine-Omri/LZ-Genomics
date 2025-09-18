@@ -7,25 +7,24 @@ import numpy as np
 from sklearn.metrics import matthews_corrcoef, accuracy_score, precision_score, recall_score, f1_score
 
 import transformers
-from transformers import AutoTokenizer, BertForSequenceClassification, Trainer, AutoModelForSequenceClassification, TrainingArguments, HfArgumentParser
+from transformers import AutoTokenizer, AutoModel, Trainer, AutoModelForSequenceClassification, TrainingArguments, HfArgumentParser
 from torch.utils.data import Dataset
 from memory_profiler import profile
 
 
 @dataclass
 class Arguments(TrainingArguments):
-    dataset_folder: str = field(default=None, metadata={
-        "help": "Path to the dataset folder"
-    })
+    dataset_folder: str = field(default=None)
     seed: int = field(default=42)
-    output_dir: str = field(default="results/grover_ft")
+    output_dir: str = field(default="results/gena_ft")
     per_device_train_batch_size: int = field(default=16)
-    per_device_eval_batch_size: int = field(default=8)  # for 32 total batch size with 4 GPUs
+    per_device_eval_batch_size: int = field(default=8)
     eval_strategy: str = field(default="steps")
-    learning_rate: float = field(default=1e-4) # from grover paper
+    learning_rate: float = field(default=5e-5)
     weight_decay: float = field(default=0.01)
-    warmup_steps: int = field(default=50)
-    num_train_epochs: int = field(default=8)
+    num_train_epochs: int = field(default=10)
+    warmup_steps: int = field(default=50)  
+    max_grad_norm: float = field(default=1.0)  
     metric_for_best_model: str = field(default="matthews_correlation")
     load_best_model_at_end: bool = field(default=True)
     save_only_model: bool = field(default=True)
@@ -107,9 +106,22 @@ def main(args: Arguments):
     validation_data = pd.read_csv(val_path)
     test_data = pd.read_csv(test_path)
     
-    tokenizer = AutoTokenizer.from_pretrained("PoetschLab/GROVER")
-    model = AutoModelForSequenceClassification.from_pretrained(
-        "PoetschLab/GROVER",
+    tokenizer = AutoTokenizer.from_pretrained('AIRI-Institute/gena-lm-bert-base-t2t')
+    model = AutoModel.from_pretrained('AIRI-Institute/gena-lm-bert-base-t2t', trust_remote_code=True)
+    gena_module_name = model.__class__.__module__
+    print(gena_module_name)
+
+    import importlib
+    # available class names:
+    # - BertModel, BertForPreTraining, BertForMaskedLM, BertForNextSentencePrediction,
+    # - BertForSequenceClassification, BertForMultipleChoice, BertForTokenClassification,
+    # - BertForQuestionAnswering
+    # check https://huggingface.co/docs/transformers/model_doc/bert
+    cls = getattr(importlib.import_module(gena_module_name), 'BertForSequenceClassification')
+    print(cls)
+
+    model = cls.from_pretrained(
+        'AIRI-Institute/gena-lm-bert-base-t2t',
         num_labels=len(train_data["label"].unique())
     )
 

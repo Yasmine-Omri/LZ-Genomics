@@ -20,6 +20,7 @@ from collections import Counter
 import pandas as pd
 from memory_profiler import profile
 from sklearn.metrics import f1_score, matthews_corrcoef
+from lz78 import BackgroundPriors, KmerMultinomial, Sequences
 
 ALPHABET = "ACGT"
 
@@ -53,24 +54,6 @@ def parse_list(arg):
     return out
 
 # =============================== small utils ===============================
-
-def revcomp(seq):
-    table = str.maketrans("ACGT","TGCA")
-    return seq.translate(table)[::-1]
-
-def canonical_kmer(km):
-    rc = revcomp(km)
-    return km if km <= rc else rc
-
-def kmers_of(seq, k, canonical=True):
-    L = len(seq)
-    if L < k: return []
-    out = []
-    for i in range(L-k+1):
-        km = seq[i:i+k]
-        if canonical: km = canonical_kmer(km)
-        out.append(km)
-    return out
 
 def handle_N_df(df, setting="remove"):
     rows=[]
@@ -113,7 +96,7 @@ def count_with_jellyfish(class_fastas, k, threads=8, hashsize="200M", canonical=
     jf = check_bin(jellyfish_bin)
     if not jf:
         raise RuntimeError("jellyfish binary not found. Set --jellyfish_bin.")
-    class_counts = {}
+    files = []
     for c, fa in class_fastas.items():
         db = os.path.join(tdir, f"class_{c}.jf")
         cmd = [jf, "count", "-m", str(k), "-s", str(hashsize), "-t", str(threads), "-o", db]
@@ -124,20 +107,15 @@ def count_with_jellyfish(class_fastas, k, threads=8, hashsize="200M", canonical=
         tsv = os.path.join(tdir, f"class_{c}.tsv")
         with open(tsv, "w") as outfh:
             subprocess.run([jf, "dump", "-c", db], check=True, stdout=outfh, stderr=subprocess.PIPE)
-        cnt = Counter()
-        with open(tsv) as fh:
-            for line in fh:
-                km, ct = line.strip().split()
-                cnt[km] += int(ct)
-        class_counts[c] = cnt
-    return class_counts
+        files.append(tsv)
+    return files
 
 # KMC3 (no native canonical -> fold later)
 def count_with_kmc3(class_fastas, k, threads=8, kmc_bin="kmc", kmc_dump_bin="kmc_dump", mem_gb=4, tdir=None):
     kmc = check_bin(kmc_bin); dump = check_bin(kmc_dump_bin)
     if not kmc or not dump:
         raise RuntimeError("kmc/kmc_dump not found. Set --kmc_bin / --kmc_dump_bin.")
-    class_counts = {}
+    files = []
     tmp_dir = os.path.join(tdir, "kmc_tmp"); os.makedirs(tmp_dir, exist_ok=True)
     for c, fa in class_fastas.items():
         db = os.path.join(tdir, f"class_{c}_kmc")
@@ -146,15 +124,8 @@ def count_with_kmc3(class_fastas, k, threads=8, kmc_bin="kmc", kmc_dump_bin="kmc
         tsv = os.path.join(tdir, f"class_{c}.tsv")
         with open(tsv, "w") as outfh:
             subprocess.run([dump, db], check=True, stdout=outfh, stderr=subprocess.PIPE)
-        cnt = Counter()
-        with open(tsv) as fh:
-            for line in fh:
-                parts = line.strip().split()
-                if len(parts) != 2: continue
-                km, ct = parts
-                cnt[km] += int(ct)
-        class_counts[c] = cnt
-    return class_counts
+        files.append(tsv)
+    return files
 
 # Squeakr (no native canonical -> fold later)
 def count_with_squeakr(class_fastas, k, threads=8, squeakr_count_bin="squeakr-count", squeakr_dump_bin="squeakr-dump",
@@ -162,7 +133,7 @@ def count_with_squeakr(class_fastas, k, threads=8, squeakr_count_bin="squeakr-co
     sqc = check_bin(squeakr_count_bin); sqd = check_bin(squeakr_dump_bin)
     if not sqc or not sqd:
         raise RuntimeError("squeakr-count/squeakr-dump not found. Set --squeakr_count_bin / --squeakr_dump_bin.")
-    class_counts = {}
+    files = []
     for c, fa in class_fastas.items():
         sqf = os.path.join(tdir, f"class_{c}.sqf")
         cmd = [sqc, "-k", str(k), "-t", str(threads), "-o", sqf]
@@ -172,25 +143,8 @@ def count_with_squeakr(class_fastas, k, threads=8, squeakr_count_bin="squeakr-co
         tsv = os.path.join(tdir, f"class_{c}.tsv")
         with open(tsv, "w") as outfh:
             subprocess.run([sqd, sqf], check=True, stdout=outfh, stderr=subprocess.PIPE)
-        cnt = Counter()
-        with open(tsv) as fh:
-            for line in fh:
-                parts = line.strip().split()
-                if len(parts) < 2: continue
-                km, ct = parts[0], parts[-1]
-                try: cnt[km] += int(ct)
-                except: continue
-        class_counts[c] = cnt
-    return class_counts
-
-def fold_canonical_inplace(class_counts):
-    all_kmers = set()
-    for cnt in class_counts.values(): all_kmers |= set(cnt.keys())
-    mapping = {km: canonical_kmer(km) for km in all_kmers}
-    for c in list(class_counts.keys()):
-        src = class_counts[c]; dst = Counter()
-        for km, ct in src.items(): dst[mapping[km]] += ct
-        class_counts[c] = dst
+        files.append(tsv)
+    return files
 
 # ==================== pretrain / background prior ====================
 
@@ -198,6 +152,7 @@ def write_fasta_from_sequences(seq_iterable, out_path):
     with open(out_path, "w") as fh:
         for i, s in enumerate(seq_iterable):
             fh.write(f">bg_{i}\n{s}\n")
+
 
 def collect_pretrain_sequences(pretrain_csv, csv_col=None,
                                chunk_len: int = 0, chunk_stride: int = 0):
@@ -241,7 +196,8 @@ def collect_pretrain_sequences(pretrain_csv, csv_col=None,
 
     return  # neither provided
 
-def count_background_with_tool(tool, sequences_iter, k, canonical, tdir,
+
+def count_background_with_tool(tool, sequences_iter, k, canonical, tdir, bg_prob_cache: BackgroundPriors,
                                jellyfish_bin="jellyfish", jf_threads=8, jf_hashsize="200M",
                                kmc_bin="kmc", kmc_dump_bin="kmc_dump", kmc_threads=8, kmc_mem_gb=4,
                                squeakr_count_bin="squeakr-count", squeakr_dump_bin="squeakr-dump",
@@ -262,14 +218,9 @@ def count_background_with_tool(tool, sequences_iter, k, canonical, tdir,
         if canonical: cmd.append("-C")
         cmd.append(bg_fa)
         subprocess.run(cmd, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        cnt = Counter()
         with open(os.path.join(tdir, "bg.tsv"), "w") as outfh:
             subprocess.run([jf, "dump", "-c", db], check=True, stdout=outfh, stderr=subprocess.PIPE)
-        with open(os.path.join(tdir, "bg.tsv")) as fh:
-            for line in fh:
-                km, ct = line.strip().split()
-                cnt[km] += int(ct)
-        return cnt
+        bg_prob_cache.add_from_file(k, os.path.join(tdir, "bg.tsv"))
 
     elif tool == "kmc3":
         kmc = check_bin(kmc_bin); dump = check_bin(kmc_dump_bin)
@@ -281,19 +232,7 @@ def count_background_with_tool(tool, sequences_iter, k, canonical, tdir,
         subprocess.run(cmd, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         with open(os.path.join(tdir, "bg.tsv"), "w") as outfh:
             subprocess.run([dump, db], check=True, stdout=outfh, stderr=subprocess.PIPE)
-        cnt = Counter()
-        with open(os.path.join(tdir, "bg.tsv")) as fh:
-            for line in fh:
-                parts = line.strip().split()
-                if len(parts) != 2: continue
-                km, ct = parts
-                cnt[km] += int(ct)
-        if canonical:
-            folded = Counter()
-            for km, v in cnt.items():
-                folded[canonical_kmer(km)] += v
-            cnt = folded
-        return cnt
+        bg_prob_cache.add_from_file(k, os.path.join(tdir, "bg.tsv"))
 
     elif tool == "squeakr":
         sqc = check_bin(squeakr_count_bin); sqd = check_bin(squeakr_dump_bin)
@@ -306,82 +245,11 @@ def count_background_with_tool(tool, sequences_iter, k, canonical, tdir,
         subprocess.run(cmd, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         with open(os.path.join(tdir, "bg.tsv"), "w") as outfh:
             subprocess.run([sqd, sqf], check=True, stdout=outfh, stderr=subprocess.PIPE)
-        cnt = Counter()
-        with open(os.path.join(tdir, "bg.tsv")) as fh:
-            for line in fh:
-                parts = line.strip().split()
-                if len(parts) < 2: continue
-                km, ct = parts[0], parts[-1]
-                try: cnt[km] += int(ct)
-                except: continue
-        if canonical:
-            folded = Counter()
-            for km, v in cnt.items():
-                folded[canonical_kmer(km)] += v
-            cnt = folded
-        return cnt
+        bg_prob_cache.add_from_file(k, os.path.join(tdir, "bg.tsv"))
 
     else:
         raise RuntimeError("Unknown tool for background counting.")
 
-# ============================= model & metrics =============================
-
-class KmerMultinomial:
-    def __init__(self, k, alpha=1.0, feature_mode="count", bg_probs=None, canonical=True):
-        self.k = k
-        self.alpha = float(alpha)
-        self.feature_mode = feature_mode  # 'count' or 'binary'
-        self.bg_probs = bg_probs          # dict(kmer->prob) or None
-        self.canonical = canonical
-        self.classes_ = None
-        self.class_probs = None  # c -> {kmer: prob}
-
-    def fit_from_counts(self, class_counts):
-        self.classes_ = sorted(class_counts.keys())
-        vocab = set()
-        for c in self.classes_: vocab |= set(class_counts[c].keys())
-        if self.bg_probs is not None:     # include bg support
-            vocab |= set(self.bg_probs.keys())
-        V = max(len(vocab), 1)
-
-        # Normalize bg_probs over current vocab; treat as unit-mass prior (no user β)
-        bg = None
-        if self.bg_probs is not None:
-            tot_bg = sum(self.bg_probs.get(km, 0.0) for km in vocab)
-            if tot_bg > 0:
-                bg = {km: self.bg_probs.get(km, 0.0) / tot_bg for km in vocab}
-            else:
-                bg = None
-
-        self.class_probs = {}
-        for c in self.classes_:
-            counts_c = class_counts[c]
-            denom = sum(counts_c.get(km, 0) for km in vocab) + (self.alpha * V) + (1.0 if bg is not None else 0.0)
-            probs = {}
-            for km in vocab:
-                prior = bg[km] if bg is not None else 0.0
-                probs[km] = (counts_c.get(km, 0) + self.alpha + prior) / denom
-            self.class_probs[c] = probs
-
-    def _seq_counts(self, seq):
-        kms = kmers_of(seq, self.k, canonical=self.canonical)
-        return Counter(set(kms)) if self.feature_mode == "binary" else Counter(kms)
-
-    def predict_one(self, seq):
-        x = self._seq_counts(seq)
-        best_c, best_s = None, -1e300
-        for c in self.classes_:
-            p = self.class_probs[c]
-            s = 0.0
-            for km, cnt in x.items():
-                pt = p.get(km, 1e-12)
-                s += cnt * math.log(pt)
-            if s > best_s:
-                best_s, best_c = s, c
-        return best_c
-
-    def predict_df(self, df):
-        return [self.predict_one(s) for s in df["sequence"].values]
 
 def accuracy(y_true, y_pred):
     ok = sum(int(a)==int(b) for a,b in zip(y_true,y_pred))
@@ -390,6 +258,7 @@ def accuracy(y_true, y_pred):
 def mcc_multiclass(y_true, y_pred):
     # scikit-learn’s MCC supports binary and multiclass natively
     return matthews_corrcoef(list(map(int, y_true)), list(map(int, y_pred)))
+
 
 # ================================== main ==================================
 @profile
@@ -410,6 +279,7 @@ def main():
     # empirical background prior
     ap.add_argument("--use_empirical_prior", default="auto",
                     help="auto|True|False. If auto and pretrain provided, use prior; if True, require pretrain; if False, disable.")
+    ap.add_argument("--pretrain_fasta", default=None, help="Path to unlabeled DNA FASTA (optional).")
     ap.add_argument("--pretrain_csv", default=None, help="Path to unlabeled CSV with a sequence column (optional).")
     ap.add_argument("--pretrain_csv_col", default=None, help="CSV column name containing sequences.")
     ap.add_argument("--pretrain_chunk_len", type=int, default=0,
@@ -432,7 +302,11 @@ def main():
     ap.add_argument("--squeakr_threads", type=int, default=8)
     ap.add_argument("--squeakr_exact", default="True")
 
+    ap.add_argument("--inf_threads", type=int, default=8)
+
     args = ap.parse_args()
+
+    # -------- timing: start of data read (to mirror Train.py) --------
 
     # parse lists
     ks = sorted(int(x) for x in parse_list(args.ks))
@@ -448,14 +322,14 @@ def main():
     use_empirical = str(args.use_empirical_prior).lower()
     if use_empirical not in ("auto","true","false"):
         raise ValueError("--use_empirical_prior must be auto|True|False")
-    have_pretrain = bool(args.pretrain_csv)
+    have_pretrain = bool(args.pretrain_fasta or args.pretrain_csv)
     if use_empirical == "auto":
         use_empirical = "true" if have_pretrain else "false"
     if use_empirical == "true" and not have_pretrain:
-        raise ValueError("--use_empirical_prior True was set but no --pretrain_csv provided.")
+        raise ValueError("--use_empirical_prior True was set but no --pretrain_fasta/--pretrain_csv provided.")
 
     read_data_in_time = time.perf_counter()
-
+    
     # load splits
     dpath = args.dataset_folder
     train_path = os.path.join(dpath, "train.csv")
@@ -469,7 +343,9 @@ def main():
     train = handle_N_df(train, handle_setting)
     val  = handle_N_df(val, handle_setting)
 
-    # -------- training start time  --------
+    val_seq_list = Sequences(val["sequence"].tolist() if val is not None else [])
+
+    # -------- training start time (mirrors Train.py) --------
     print("-----TRAINING")
     train_start_time = time.perf_counter()
 
@@ -479,21 +355,20 @@ def main():
     best_model = None
 
     # cache bg prior per k
-    bg_prob_cache = {}  # k -> dict(kmer->prob) or None
+    bg_prob_cache = BackgroundPriors(canonical=use_canonical)
 
     # special-case selection: if select_by == mcc and dataset is covid -> use F1 instead
     selection_override_to_f1 = (select_by == "mcc" and dataset_name == "covid")
 
     for k, alpha, fmode in itertools.product(ks, alphas, feature_modes):
         # Build bg prior once per k (if enabled)
-        bg_probs_for_k = None
         if use_empirical == "true":
-            if k not in bg_prob_cache:
+            if not bg_prob_cache.has_k(k):
                 with tempfile.TemporaryDirectory() as tmp_bg:
                     def _bg_stream():
                         skipped = 0
                         for s in collect_pretrain_sequences(
-                                args.pretrain_csv,
+                                args.pretrain_fasta, args.pretrain_csv,
                                 args.pretrain_csv_col,
                                 args.pretrain_chunk_len, args.pretrain_chunk_stride):
                             # apply same N policy as train; also ensure DNA content
@@ -510,19 +385,15 @@ def main():
                         if skipped:
                             print(f"[WARN] Background: skipped {skipped} non-ACGT/empty records.", flush=True)
                     try:
-                        bg_counts = count_background_with_tool(
-                            args.tool, _bg_stream(), k, use_canonical, tmp_bg,
+                        count_background_with_tool(
+                            args.tool, _bg_stream(), k, use_canonical, tmp_bg, bg_prob_cache,
                             jellyfish_bin=args.jellyfish_bin, jf_threads=args.jf_threads, jf_hashsize=args.jf_hashsize,
                             kmc_bin=args.kmc_bin, kmc_dump_bin=args.kmc_dump_bin, kmc_threads=args.kmc_threads, kmc_mem_gb=args.kmc_mem_gb,
                             squeakr_count_bin=args.squeakr_count_bin, squeakr_dump_bin=args.squeakr_dump_bin,
                             squeakr_threads=args.squeakr_threads, squeakr_exact=args.squeakr_exact
                         )
-                        tot = sum(bg_counts.values())
-                        bg_prob_cache[k] = ({km: ct / tot for km, ct in bg_counts.items()} if tot > 0 else None)
                     except FileNotFoundError as e:
                         print(f"[WARN] Background prior disabled for k={k}: {e}", file=sys.stderr)
-                        bg_prob_cache[k] = None
-            bg_probs_for_k = bg_prob_cache[k]
 
         with tempfile.TemporaryDirectory() as tmp:
             class_fastas = write_class_fastas(train, tmp)
@@ -530,39 +401,39 @@ def main():
             # Count per-class with selected tool
             t_train0 = time.perf_counter()
             if args.tool == "jellyfish":
-                class_counts = count_with_jellyfish(
+                files = count_with_jellyfish(
                     class_fastas, k,
                     threads=args.jf_threads, hashsize=args.jf_hashsize,
                     canonical=use_canonical, jellyfish_bin=args.jellyfish_bin, tdir=tmp
                 )
             elif args.tool == "kmc3":
-                class_counts = count_with_kmc3(
+                files = count_with_kmc3(
                     class_fastas, k,
                     threads=args.kmc_threads, kmc_bin=args.kmc_bin,
                     kmc_dump_bin=args.kmc_dump_bin, mem_gb=args.kmc_mem_gb, tdir=tmp
                 )
-                if use_canonical:
-                    fold_canonical_inplace(class_counts)
             elif args.tool == "squeakr":
-                class_counts = count_with_squeakr(
+                files = count_with_squeakr(
                     class_fastas, k,
                     threads=args.squeakr_threads, squeakr_count_bin=args.squeakr_count_bin,
                     squeakr_dump_bin=args.squeakr_dump_bin, exact=args.squeakr_exact, tdir=tmp
                 )
-                if use_canonical:
-                    fold_canonical_inplace(class_counts)
             else:
                 raise RuntimeError("Unknown tool")
-
-            model = KmerMultinomial(k=k, alpha=alpha, feature_mode=fmode,
-                                    bg_probs=bg_probs_for_k, canonical=use_canonical)
-            model.fit_from_counts(class_counts)
+            
+            model = KmerMultinomial(
+                k=k, alpha=alpha, feature_mode=fmode,
+                canonical=use_canonical,
+                background_priors=bg_prob_cache
+            )
+            model.fit_from_files(files)
             t_train1 = time.perf_counter()
 
-        #Validate
+        # TEST evaluation
         t_test0 = time.perf_counter()
         y_true = list(val["label"].astype(int).values)
-        y_pred = model.predict_df(val)
+        y_pred = model.predict_parallel(val_seq_list, num_threads=args.inf_threads)
+    
         acc = accuracy(y_true, y_pred)
         mcc = mcc_multiclass(y_true, y_pred)
         f1 = f1_score(y_true, y_pred, average="macro")
@@ -578,31 +449,32 @@ def main():
 
         if (best is None) or (key > best["key"]):
             best = {"k":k,"alpha":alpha,"fmode":fmode,"acc":acc,"mcc":mcc,"f1":f1,"key":key,
-                    "tool":args.tool,"canonical":use_canonical, "emp_prior": (use_empirical=='true')}
+                    "tool" :args.tool,"canonical":use_canonical, "emp_prior": (use_empirical=='true')}
             best_model = model
 
 
     print("\nBEST ON TEST:", best)
-    
+
     train_end_time = time.perf_counter()
     train_duration = train_end_time - train_start_time
 
     read_test_data_start_time = time.perf_counter()
     test = pd.read_csv(test_path) 
     test = handle_N_df(test, handle_setting)
+    test_seq_list = Sequences(test["sequence"].tolist() if test is not None else [])
     
     inference_start_time = time.perf_counter()
 
-    # TEST evaluation
-    y_true = list(test["label"].astype(int).values)
-    y_pred = model.predict_df(test)
-    acc = accuracy(y_true, y_pred)
-    mcc = mcc_multiclass(y_true, y_pred)
-    f1 = f1_score(y_true, y_pred, average="macro")
-    print("TEST ACC:", f"{acc:.4f}")
-    print("TEST MCC:", f"{mcc:.4f}")
-    print("TEST F1:",  f"{f1:.4f}")
- 
+    # VERIFY evaluation
+    yv = list(test["label"].astype(int).values)
+    pv = best_model.predict_parallel(test_seq_list, num_threads=args.inf_threads)
+    vacc = accuracy(yv, pv)
+    vmcc = mcc_multiclass(yv, pv)
+    vf1 = f1_score(yv, pv, average="macro")
+    print("VERIFY ACC:", f"{vacc:.4f}")
+    print("VERIFY MCC:", f"{vmcc:.4f}")
+    print("VERIFY F1:",  f"{vf1:.4f}")
+
     inference_end_time = time.perf_counter()
     inference_duration = (inference_end_time - inference_start_time)
 
@@ -625,6 +497,7 @@ def main():
     print(f"Total inference time: {inference_duration:.3f} seconds")
     print(f"Inference time/symbol: {inference_duration/(nb_test_seqs * test_seq_len)} seconds")
     # ---------- END TIME PROFILING+ ----------
+    print("Done.")
 
     #Output memory report, which is automatically printed at the end of the run
     print("-----MEMORY REPORT")

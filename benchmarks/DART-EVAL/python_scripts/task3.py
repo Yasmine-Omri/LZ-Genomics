@@ -453,6 +453,7 @@ def main(dataset_folder, pretrain_file):
     print(f"Number of test sequences: {len(test_data)}")
     print(f"Length of test sequence: {len(test_data.iloc[0, 0])}")
     print(f"Read test data time: {(inference_start_time - read_test_data_start_time): .5f}")
+    inference_duration = inference_end_time - inference_start_time
     print(f"Total inference time: {inference_duration:.3f} seconds")
     print(f"Inference time/symbol: {inference_duration/(len(test_data) * len(test_data.iloc[0, 0]))} seconds")
 

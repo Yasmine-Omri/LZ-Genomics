@@ -237,9 +237,11 @@ def handle_N(data, setting="remove"):
     for _, row in data.iterrows():
         sequence, label = row['sequence'], row['label']
         processed_sequences = process_sequence(sequence, setting)
+
+        other_keys = {k: v for k, v in row.items() if k not in ['sequence', 'label']}
         
         for proc_seq in processed_sequences:
-            new_data.append({"sequence": proc_seq, "label": label})
+            new_data.append({"sequence": proc_seq, "label": label, **other_keys})
 
     return pd.DataFrame(new_data)
 
