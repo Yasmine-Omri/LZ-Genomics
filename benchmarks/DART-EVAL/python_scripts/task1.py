@@ -377,7 +377,7 @@ def main(dataset_folder, pretrain_file):
     NUM_THREADS = best_params["NUM_THREADS"]
 
     # Retrain our best SPAs and use that to test on test data 
-    spa = [LZ78SPA(alphabet_size=ALPHABET_SIZE, gamma= GAMMA, compute_training_loss=False) for _ in unique_labels]
+    spa = [LZ78SPA(alphabet_size=ALPHABET_SIZE, gamma= GAMMA, compute_training_loss=False, max_depth=args.max_depth if args.max_depth is not None else None) for _ in unique_labels]
     for i in range(len(unique_labels)):
         spa[i].set_inference_config(
             lb=1e-5,

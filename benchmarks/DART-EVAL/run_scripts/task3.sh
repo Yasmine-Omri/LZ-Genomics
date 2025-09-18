@@ -14,4 +14,6 @@ PRETRAIN_FILE="../../../dnabert_2_pretrain/dev.txt"
 OUTPUT_DIR="../outputs"
 PYTHONPATH=$(pwd)
 
-python ../python_scripts/task3.py --max_depth 16 -dataset_folder "$DATASET_FOLDER" -pretrain_file "$PRETRAIN_FILE" --include_prev_context "{False}" --gamma "{0.1, 0.33, 0.5, 0.75, 1, 3, 5}" --nb_train_iterations "{1, 3, 5, 7, 10}" --ratio_pretrain_train "{0}" --handle_n_setting "{remove}" --ensemble_type "{entropy}" --num_threads "{64}" > "$OUTPUT_DIR/task3.txt"
+#python ../python_scripts/task3.py --max_depth 16 -dataset_folder "$DATASET_FOLDER" -pretrain_file "$PRETRAIN_FILE" --include_prev_context "{False}" --gamma "{0.1, 0.33, 0.5, 0.75, 1, 3, 5}" --nb_train_iterations "{1, 3, 5, 7, 10}" --ratio_pretrain_train "{0}" --handle_n_setting "{remove}" --ensemble_type "{entropy}" --num_threads "{64}" > "$OUTPUT_DIR/task3.txt"
+python ../python_scripts/task3.py --max_depth "{4, 8, 12}" -dataset_folder "$DATASET_FOLDER" -pretrain_file "$PRETRAIN_FILE" --include_prev_context "{False}" --gamma "{0.1, 0.33, 0.5, 0.75, 1, 3, 5, 6, 7, 8}" --nb_train_iterations "{1, 3, 5}" --ratio_pretrain_train "{0}" --handle_n_setting "{remove}" --ensemble_type "{entropy}" --num_threads "{64}" > "$OUTPUT_DIR/task3_updated.txt"
+#added depth sweep to .py

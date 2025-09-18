@@ -55,7 +55,7 @@ HANDLE_N_SETTING = None
 RATIO_PRETRAIN_TRAIN = None # nb of pretrained sequences / nb train sequences
 ENSEMBLE_TYPE = None
 NUM_THREADS = None
-
+MAX_DEPTHS = None
 
 import argparse
 
@@ -258,6 +258,7 @@ def main(dataset_folder, pretrain_file):
     global ratio_pretrain_train
     global ensemble_type
     global num_threads
+    global max_depth
 
     read_data_in_time = time.perf_counter()
     
@@ -285,10 +286,10 @@ def main(dataset_folder, pretrain_file):
 
     print("-----TRAINING")
     print("---SEARCH FOR BEST SPA(s)")
-    print("nb_iterations , gamma, include_prev_context, handle_N_setting, ratio, ensemble type, num_threads, time taken, accuracy", flush=True)
+    print("nb_iterations , gamma, include_prev_context, handle_N_setting, ratio, ensemble type, max_depth, num_threads, time taken, accuracy", flush=True)
     train_start_time = time.perf_counter()
-    for include_prev_context, handle_N_setting, ratio in itertools.product(
-        include_prev_contexts, handle_N_settings, ratio_pretrain_train
+    for include_prev_context, handle_N_setting, ratio, max_depth in itertools.product(
+        include_prev_contexts, handle_N_settings, ratio_pretrain_train, max_depth
     ):  
         INCLUDE_PREV_CONTEXT = include_prev_context
         GAMMA = gammas
@@ -297,6 +298,7 @@ def main(dataset_folder, pretrain_file):
         RATIO_PRETRAIN_TRAIN = ratio 
         ENSEMBLE_TYPE = ensemble_type
         NUM_THREADS = num_threads
+        MAX_DEPTH = max_depth
         
         train_data = handle_N(train_data, setting=HANDLE_N_SETTING)
         validation_data = handle_N(validation_data)
@@ -306,7 +308,7 @@ def main(dataset_folder, pretrain_file):
         
         # Create list of spas based on number of labels: (spa_0 and spa_1 for labels 0, 1)
         #spa = [LZ78SPA(alphabet_size=ALPHABET_SIZE, compute_training_loss=False) for _ in unique_labels]
-        spa = [LZ78SPA(alphabet_size=ALPHABET_SIZE, compute_training_loss=False,  max_depth=args.max_depth if args.max_depth is not None else None) for _ in unique_labels]
+        spa = [LZ78SPA(alphabet_size=ALPHABET_SIZE, compute_training_loss=False, max_depth=int(MAX_DEPTH) if MAX_DEPTH else None) for _ in unique_labels]
         for i in range(len(unique_labels)):
             spa[i].set_inference_config(
                 lb=1e-5,
@@ -337,7 +339,7 @@ def main(dataset_folder, pretrain_file):
                     accuracy = test_seq(validation_data, spa, num_threads)
                     train_one_iter_end_time = time.perf_counter()
                     train_one_iter_duration = train_one_iter_end_time - train_one_iter_start_time
-                    print(f"{nb_iterations}, {gamma}, {include_prev_context}, {handle_N_setting}, {ratio}, {ensemble}, {NUM_THREADS}, {train_one_iter_duration:.3f}, {(accuracy * 100):.2f}", flush=True)
+                    print(f"{nb_iterations}, {gamma}, {include_prev_context}, {handle_N_setting}, {ratio}, {ensemble}, {max_depth}, {NUM_THREADS}, {train_one_iter_duration:.3f}, {(accuracy * 100):.2f}", flush=True)
 
                 
                 
@@ -348,6 +350,7 @@ def main(dataset_folder, pretrain_file):
                         "HANDLE_N_SETTING": HANDLE_N_SETTING,
                         "RATIO_PRETRAIN_TRAIN": RATIO_PRETRAIN_TRAIN,
                         "ENSEMBLE_TYPE": ensemble,
+                        "MAX_DEPTH": MAX_DEPTH,
                         "NUM_THREADS": NUM_THREADS,
                         "TRAINING_TIME": train_one_iter_duration, 
                         "VALIDATION ACCURACY": accuracy
@@ -373,9 +376,10 @@ def main(dataset_folder, pretrain_file):
     RATIO_PRETRAIN_TRAIN = best_params["RATIO_PRETRAIN_TRAIN"]
     ENSEMBLE_TYPE = best_params["ENSEMBLE_TYPE"]
     NUM_THREADS = best_params["NUM_THREADS"]
+    MAX_DEPTH=int(best_params["MAX_DEPTH"])
 
     # Retrain our best SPAs and use that to test on test data 
-    spa = [LZ78SPA(alphabet_size=ALPHABET_SIZE, gamma= GAMMA, compute_training_loss=False) for _ in unique_labels]
+    spa = [LZ78SPA(alphabet_size=ALPHABET_SIZE, gamma= GAMMA, compute_training_loss=False, max_depth=int(MAX_DEPTH) if MAX_DEPTH else None) for _ in unique_labels]
     for i in range(len(unique_labels)):
         spa[i].set_inference_config(
             lb=1e-5,
@@ -460,7 +464,11 @@ if __name__ == "__main__":
     #Parse all arguments
     parser = argparse.ArgumentParser(description="Script for training and testing SPA model")
 
-    parser.add_argument("--max_depth", type=int, default=None, help="Max tree depth (None = unlimited).")
+    #parser.add_argument("--max_depth", type=int, default=None, help="Max tree depth (None = unlimited).")
+    parser.add_argument("--max_depth", type=str, required=False, default="{}",
+                        help="Set of max depths for the LZ78 tree, e.g., {4, 8, 12}., tried in addition to not limiting the depth. Defaults to empty ")
+    
+    
     parser.add_argument("-dataset_folder", type=str, required=True, help="Path to the dataset folder")
     parser.add_argument("-pretrain_file", type=str, required=True, help="Path to the pretraining file")
     parser.add_argument("--include_prev_context", type=str, required=True,
@@ -496,6 +504,8 @@ if __name__ == "__main__":
 
     num_threads = parse_set(args.num_threads)
     num_threads = int(list(num_threads)[0])
+
+    max_depth = [None] + [int(x) for x in list(parse_set(args.max_depth))]
 
     main(args.dataset_folder, args.pretrain_file)
 
