@@ -35,7 +35,8 @@ def main(
             "--handle_n_setting", "{remove}",
             "--ensemble_type", "{entropy}",
             "--num_threads", "{32}",
-            "--validation_metric", metric,
+            # "--validation_metric", metric,
+            "--test_metric", metric,
             # "--augmentation_factors", "{0, 0.5, 1, 2}",
             # "--shuffle_preserve_kmer", "3",
             "--max_depth", "{4, 6}"
