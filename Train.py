@@ -203,7 +203,7 @@ def handle_N(data, setting="remove"):
     return pd.DataFrame(new_data)
 
 @profile
-def main(dataset_folder, pretrain_file, metric):
+def main(dataset_folder, pretrain_file, val_metric, test_metric):
     global INCLUDE_PREV_CONTEXT
     global GAMMA
     global NB_TRAIN_ITERATIONS 
@@ -249,7 +249,7 @@ def main(dataset_folder, pretrain_file, metric):
 
     print("-----TRAINING")
     print("---SEARCH FOR BEST SPA(s)")
-    print(f"nb_iterations, aug_factor, gamma, include_prev_context, handle_N_setting, ratio, ensemble_type, max_depth, num_threads, time taken, {metric}", flush=True)
+    print(f"nb_iterations, aug_factor, gamma, include_prev_context, handle_N_setting, ratio, ensemble_type, max_depth, num_threads, time taken, {val_metric}", flush=True)
     train_start_time = time.perf_counter()
     for include_prev_context, handle_N_setting, ratio, aug_factor, max_depth in itertools.product(
         include_prev_contexts, handle_N_settings, ratio_pretrain_train, augmentation_factors, max_depth
@@ -319,10 +319,10 @@ def main(dataset_folder, pretrain_file, metric):
                 # Test on validation test to assess this combination of hyperparams
                     for index in range(len(spa)):
                         spa[index].set_inference_config(gamma=gamma, ensemble_type=ensemble)
-                    val_metric = test_seq(validation_data, spa, metric=metric, n_threads=NUM_THREADS)
+                    val_metric_value = test_seq(validation_data, spa, metric=val_metric, n_threads=NUM_THREADS)
                     train_one_iter_end_time = time.perf_counter()
                     train_one_iter_duration = train_one_iter_end_time - train_one_iter_start_time
-                    print(f"{nb_iterations}, {aug_factor}, {gamma}, {include_prev_context}, {handle_N_setting}, {ratio}, {ensemble}, {max_depth}, {NUM_THREADS}, {train_one_iter_duration:.3f}, {(val_metric * 100):.2f}", flush=True)
+                    print(f"{nb_iterations}, {aug_factor}, {gamma}, {include_prev_context}, {handle_N_setting}, {ratio}, {ensemble}, {max_depth}, {NUM_THREADS}, {train_one_iter_duration:.3f}, {(val_metric_value * 100):.2f}", flush=True)
 
                 
                     current_result = pd.DataFrame([{
@@ -335,7 +335,7 @@ def main(dataset_folder, pretrain_file, metric):
                         "MAX_DEPTH": MAX_DEPTH if MAX_DEPTH else 0,
                         "NUM_THREADS": NUM_THREADS,
                         "TRAINING_TIME": train_one_iter_duration, 
-                        "VALIDATION METRIC": val_metric,
+                        "VALIDATION METRIC": val_metric_value,
                         "AUGMENTATION_FACTOR": aug_factor,
                     }])
 
@@ -397,11 +397,10 @@ def main(dataset_folder, pretrain_file, metric):
     inference_start_time = time.perf_counter()
 
     test_data = handle_N(test_data)
-    test_metric = test_seq(test_data, spa, metric=metric, n_threads=NUM_THREADS)
+    test_metric_value = test_seq(test_data, spa, metric=test_metric, n_threads=NUM_THREADS)
 
     inference_end_time = time.perf_counter()
-    print(f"Final metric with best hyperparameters: {(test_metric*100):.2f}")
-    
+    print(f"Final metric ({test_metric}) with best hyperparameters: {(test_metric_value*100):.2f}")
         
     inference_duration = inference_end_time - inference_start_time
 
@@ -461,6 +460,9 @@ if __name__ == "__main__":
     parser.add_argument("--validation_metric", type=str, default="accuracy",
                         choices=["accuracy", "mcc", "f1"],
                         help="Metric to use for validation, default is 'accuracy'")
+    parser.add_argument("--test_metric", type=str, default="accuracy",
+                        choices=["accuracy", "mcc", "f1"],
+                        help="Metric to use for validation, default is 'accuracy'")
     parser.add_argument("--augmentation_factors", type=str, required=False, default="{0}",
                         help=("Set of augmentation factors for adding shuffled versions of the positive "
                         "sequences to the negative training examples, e.g., '{0, 0.5, 1}'"
@@ -495,6 +497,6 @@ if __name__ == "__main__":
 
     max_depth = [None] + [int(x) for x in list(parse_set(args.max_depth))]
 
-    main(args.dataset_folder, args.pretrain_file, args.validation_metric)
+    main(args.dataset_folder, args.pretrain_file, args.validation_metric, args.test_metric)
 
     

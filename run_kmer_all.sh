@@ -3,7 +3,7 @@ set -euo pipefail
 set +o braceexpand   # avoid accidental {a,b} expansion
 
 # ----------- USER KNOBS -----------
-OUTPUT_DIR="${OUTPUT_DIR:-./kmer_train_reports_acc_pretrain}"
+OUTPUT_DIR="${OUTPUT_DIR:-./kmer_train_reports_acc_pretrain_32threads}"  # output folder
 TOOL="${TOOL:-jellyfish}"                  # jellyfish | kmc3 | squeakr
 JOBS="${JOBS:-1}"                          # parallel datasets
 SKIP_IF_EXISTS="${SKIP_IF_EXISTS:-0}"      # 1=skip if report exists, 0=overwrite
@@ -25,16 +25,17 @@ PRETRAIN_CHUNK_STRIDE="${PRETRAIN_CHUNK_STRIDE:-0}" # stride for chunking
 
 # Tool-specific settings
 JELLYFISH_BIN="${JELLYFISH_BIN:-jellyfish}"
-JF_THREADS="${JF_THREADS:-8}"
+JF_THREADS="${JF_THREADS:-32}"
 JF_HASHSIZE="${JF_HASHSIZE:-200M}"
 KMC_BIN="${KMC_BIN:-kmc}"
 KMC_DUMP_BIN="${KMC_DUMP_BIN:-kmc_dump}"
-KMC_THREADS="${KMC_THREADS:-8}"
+KMC_THREADS="${KMC_THREADS:-32}"
 KMC_MEM_GB="${KMC_MEM_GB:-4}"
 SQUEAKR_COUNT_BIN="${SQUEAKR_COUNT_BIN:-squeakr-count}"
 SQUEAKR_DUMP_BIN="${SQUEAKR_DUMP_BIN:-squeakr-dump}"
-SQUEAKR_THREADS="${SQUEAKR_THREADS:-8}"
+SQUEAKR_THREADS="${SQUEAKR_THREADS:-32}"
 SQUEAKR_exact="${SQUEAKR_exact:-True}"
+INF_THREADS="${INF_THREADS:-32}"  # threads for inference in KmerBaseline_external.py
 
 mkdir -p "$OUTPUT_DIR"
 
@@ -82,7 +83,9 @@ declare -A DATASET_OUTPUTS=(
 
 )
 
-KMER_SCRIPT="${KMER_SCRIPT:-./KmerBaseline_external.py}"
+# KMER_SCRIPT="${KMER_SCRIPT:-./KmerBaseline_external.py}"
+KMER_SCRIPT="${KMER_SCRIPT:-./KmerBaseline_rust.py}"
+
 
 # lightweight semaphore
 sem() {
@@ -109,6 +112,7 @@ for DATASET_FOLDER in "${!DATASET_OUTPUTS[@]}"; do
         --canonical $CANONICAL
         --select_by "$SELECT_BY"
         --use_empirical_prior "$USE_EMPIRICAL_PRIOR"
+        --inf_threads "$INF_THREADS"
       )
 
   # prior inputs (optional)
@@ -133,6 +137,8 @@ for DATASET_FOLDER in "${!DATASET_OUTPUTS[@]}"; do
 
   printf 'RUN:'; printf ' %q' "${CMD[@]}"; printf ' > %q\n' "$OUTFILE"
   sem "$JOBS" "${CMD[@]}" > "$OUTFILE" 2>&1
+  # # FIXME: debug
+  # ${CMD[@]}
 done
 
 wait
