@@ -350,10 +350,10 @@ def main(dataset_folder, pretrain_file):
                         "HANDLE_N_SETTING": HANDLE_N_SETTING,
                         "RATIO_PRETRAIN_TRAIN": RATIO_PRETRAIN_TRAIN,
                         "ENSEMBLE_TYPE": ensemble,
-                        "MAX_DEPTH": MAX_DEPTH,
+                        "MAX_DEPTH": MAX_DEPTH if MAX_DEPTH is not None else 0,
                         "NUM_THREADS": NUM_THREADS,
                         "TRAINING_TIME": train_one_iter_duration, 
-                        "VALIDATION ACCURACY": accuracy
+                        "VALIDATION ACCURACY": accuracy,
                     }])
 
                 # Concatenate the current result with results_df
@@ -377,9 +377,11 @@ def main(dataset_folder, pretrain_file):
     ENSEMBLE_TYPE = best_params["ENSEMBLE_TYPE"]
     NUM_THREADS = best_params["NUM_THREADS"]
     MAX_DEPTH=int(best_params["MAX_DEPTH"])
+    if MAX_DEPTH == 0:
+        MAX_DEPTH = None
 
     # Retrain our best SPAs and use that to test on test data 
-    spa = [LZ78SPA(alphabet_size=ALPHABET_SIZE, gamma= GAMMA, compute_training_loss=False, max_depth=int(MAX_DEPTH) if MAX_DEPTH else None) for _ in unique_labels]
+    spa = [LZ78SPA(alphabet_size=ALPHABET_SIZE, gamma= GAMMA, compute_training_loss=False, max_depth=MAX_DEPTH) for _ in unique_labels]
     for i in range(len(unique_labels)):
         spa[i].set_inference_config(
             lb=1e-5,

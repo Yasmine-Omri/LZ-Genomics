@@ -431,9 +431,10 @@ def main(dataset_folder, pretrain_file, metric):
     val_path   = f"{dataset_folder}/dev.csv"
     test_path  = f"{dataset_folder}/test.csv"
     
-    train_data = pd.read_csv(train_path)
-    validation_data = pd.read_csv(val_path)
-    test_data = pd.read_csv(test_path)
+    # the labels are bitstrings, e.g., "01001" for 5 labels
+    train_data = pd.read_csv(train_path, dtype={"label": str})
+    validation_data = pd.read_csv(val_path, dtype={"label": str})
+    test_data = pd.read_csv(test_path, dtype={"label": str})
     
     ALPHABET_SIZE = 4
 
@@ -465,7 +466,7 @@ def main(dataset_folder, pretrain_file, metric):
     print(f"nb_iterations, aug_factor, gamma, include_prev_context, handle_N_setting, ratio, ensemble_type, max_depth, threads_per_job, time taken, {metric}", flush=True)
     train_start_time = time.perf_counter()
 
-    results = Parallel(n_jobs=label_jobs, backend="loky")(
+    results = Parallel(n_jobs=label_jobs, backend="multiprocessing")(
         delayed(run_sweep_for_label)(
             k,
             X_train, Y_train[:, k],
@@ -494,7 +495,7 @@ def main(dataset_folder, pretrain_file, metric):
 
     # ---- RETRAIN BEST PER LABEL + TEST (parallel) ----
     print("-----TESTING")
-    test_results = Parallel(n_jobs=label_jobs, backend="loky")(
+    test_results = Parallel(n_jobs=label_jobs, backend="multiprocessing")(
         delayed(retrain_and_test_for_label)(
             k, best_params_per_label[k],
             X_train, Y_train[:, k].astype(int),
@@ -576,7 +577,7 @@ if __name__ == "__main__":
 
     augmentation_factors = parse_set(args.augmentation_factors)
     preserve_kmer = args.shuffle_preserve_kmer
-    print(f"Preserving k-mer frequencies: {preserve_kmer}")
+    # print(f"Preserving k-mer frequencies: {preserve_kmer}")
 
     num_threads = parse_set(args.num_threads)
     num_threads = int(list(num_threads)[0])

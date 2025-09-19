@@ -150,10 +150,10 @@ def test_seq(data: pd.DataFrame, spas: list[LZ78SPA], compute_auc=False, n_threa
     # compute metric (of all test runs)
 
     labels = data["label"]
-    data = [Sequence(seq, charmap=CharacterMap("ACGT")) for seq in data["sequence"]]
-    log_losses = np.zeros((len(spas), len(data)))
+    data_seq = [Sequence(seq, charmap=CharacterMap("ACGT")) for seq in data["sequence"]]
+    log_losses = np.zeros((len(spas), len(data_seq)))
     for i in range(len(spas)):
-        log_losses[i, :] = [res["avg_log_loss"] for res in spas[i].compute_test_loss_parallel(data, num_threads=n_threads)]
+        log_losses[i, :] = [res["avg_log_loss"] for res in spas[i].compute_test_loss_parallel(data_seq, num_threads=n_threads)]
     classes = np.argmin(log_losses, axis=0)
 
     results = {}
@@ -511,7 +511,7 @@ if __name__ == "__main__":
 
     parser.add_argument("-dataset_folder", type=str, required=True, help="Path to the dataset folder")
     parser.add_argument("-pretrain_file", type=str, required=True, help="Path to the pretraining file")
-    parser.add_argument("--include_prev_context", type=bool, nargs='+', required=True,
+    parser.add_argument("--include_prev_context", type=str, nargs='+', required=True,
                         help="Set of values for INCLUDE_PREV_CONTEXT, e.g., 'True False'")
     parser.add_argument("--gamma", type=float, nargs='+', required=True,
                         help="Set of values for GAMMA, e.g., '0.1 0.33 0.5 0.75 1 3 5'")
@@ -543,8 +543,10 @@ if __name__ == "__main__":
                         help="Ratio of reverse-complement sequences to add to the training data. Default is 0 (no augmentation).")
     args = parser.parse_args()
 
+    include_prev_context = [s.lower() == 'true' for s in args.include_prev_context]
+
     hyperparams = HyperparameterSweep(
-        include_prev_context=args.include_prev_context,
+        include_prev_context=include_prev_context,
         gamma=args.gamma,
         nb_train_iterations=args.nb_train_iterations,
         handle_N_setting=args.handle_n_setting,
@@ -554,6 +556,8 @@ if __name__ == "__main__":
         max_depth=[None] + args.max_depth,
         preserve_kmer=args.shuffle_preserve_kmer
     )
+
+    print("Parsed hyperparameters:", hyperparams)
 
     main(
         dataset_folder=args.dataset_folder,
