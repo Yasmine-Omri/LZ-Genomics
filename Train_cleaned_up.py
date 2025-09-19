@@ -275,7 +275,8 @@ def main(
     test_metric: str,
     hyperparams: HyperparameterSweep,
     num_threads: int = 32,
-    revcomp_augment_factor: float = 0.0
+    revcomp_augment_factor: float = 0.0,
+    target_class_ratios: list[float] = []
 ):
     read_data_in_time = time.perf_counter()
     
@@ -286,6 +287,34 @@ def main(
 
     train_data = pd.read_csv(train_path)
     validation_data = pd.read_csv(val_path)
+
+    n_classes = len(train_data['label'].unique())
+
+    if len(target_class_ratios) == 0: # no balancing
+        target_class_ratios = [1.0 / n_classes] * n_classes
+        balance_classes = False
+    elif target_class_ratios == [0]: # code for default balancing
+        target_class_ratios = [1.0 / n_classes] * n_classes
+        balance_classes = True
+    else:
+        balance_classes = True
+
+    target_class_ratios = [r / sum(target_class_ratios) for r in target_class_ratios]
+     # check that class_ratios has one entry per class and sums to 1.0
+    assert len(target_class_ratios) == n_classes and abs(sum(target_class_ratios) - 1.0) < 1e-6, \
+        "class_ratios must have one entry per class and sum to 1.0"
+    print(f"Using class ratios: {target_class_ratios}", flush=True)
+
+    raw_class_ratios = train_data['label'].value_counts(normalize=True).sort_index().tolist()
+    print(f"Raw class ratios: {raw_class_ratios}", flush=True)
+
+    # Downsample classes to meet target ratios
+    # raw * sample = target so sample propto target/raw
+    sample_weights = [t / r if r > 0 else 0.0 for r, t in zip(raw_class_ratios, target_class_ratios)]
+    # we want to max weight to be 1.0
+    max_weight = max(sample_weights)
+    sample_weights = [w / max_weight for w in sample_weights]
+    print(f"Sampling weights: {sample_weights}", flush=True)
     
     unique_labels = train_data['label'].unique()
     
@@ -302,7 +331,7 @@ def main(
 
     print("-----TRAINING")
     print("---SEARCH FOR BEST SPA(s)")
-    print(", ".join(results_df.columns))
+    print(", ".join(results_df.columns), flush=True)
     train_start_time = time.perf_counter()
 
     assert hyperparams.handle_N_setting == ["remove"], "Only 'remove' setting is currently supported for handle_N_setting."
@@ -323,11 +352,6 @@ def main(
             ratio_pretrain_train=ratio_pretrain_train,
             max_depth=max_depth
         )
-
-        old_train_data = train_data.copy()
-
-        # Augment training data with shuffled positive sequences
-        train_data = augment_shuffle(train_data, aug_factor, hyperparams.preserve_kmer)
 
         nb_train_seqs = len(train_data)
         seq_len = len(train_data.iloc[0, 0])
@@ -360,7 +384,26 @@ def main(
         for nb_iterations in hyperparams.nb_train_iterations:
             train_one_iter_start_time = time.perf_counter()
             for _ in range(nb_iterations - iterated_times):
+                # downsample training data according to class ratios
+                pre_balance_data = train_data.copy()
+                if balance_classes:
+                    sampled_dfs = []
+                    for label in unique_labels:
+                        class_df = train_data[train_data['label'] == label]
+                        weight = sample_weights[label]
+                        sampled_class_df = class_df.sample(frac=weight, replace=False, random_state=42)
+                        sampled_dfs.append(sampled_class_df)
+                    train_data = pd.concat(sampled_dfs, ignore_index=True)
+
+                train_data = augment_shuffle(train_data, aug_factor, hyperparams.preserve_kmer)
+
+                if balance_classes: #check class ratios after downsampling
+                    new_class_ratios = train_data['label'].value_counts(normalize=True).sort_index().tolist()
+                    print(f"New class ratios: {new_class_ratios}", flush=True)
+                    assert np.allclose(new_class_ratios, target_class_ratios, atol=0.05)
                 train_spa_oneIter(train_data, spa, train_config)
+
+                train_data = pre_balance_data  # reset train_data to pre-balance state for next iteration
             
             iterated_times = nb_iterations
             for gamma in hyperparams.gamma:
@@ -394,8 +437,10 @@ def main(
 
                 results_df = pd.concat([results_df, current_result], ignore_index=True)
 
-                print(", ".join(map(str, current_result.iloc[0].tolist())), flush=True)
-        train_data = old_train_data.copy()  # Reset train_data to original state after each hyperparameter combination
+                row = current_result.iloc[0].tolist()
+                # make VALIDATION_METRIC 3 decimal places
+                row[results_df.columns.get_loc("VALIDATION METRIC")] = f"{row[results_df.columns.get_loc('VALIDATION METRIC')]*100:.2f}"
+                print(", ".join(map(str, row)), flush=True)
     
     # Find the best hyperparameter combination based on the highest validation metric
     print("---BEST SPA(s) FOUND")
@@ -466,7 +511,7 @@ def main(
     for metric in test_metric_values:
         if metric == test_metric_processed:
             continue
-        print(f"Final metric ({metric}) with best hyperparameters: {(test_metric_values[metric]*100):.2f}")
+        print(f"Final metric ({metric}) with best hyperparameters: {test_metric_values[metric]}")
 
         
     inference_duration = inference_end_time - inference_start_time
@@ -541,6 +586,10 @@ if __name__ == "__main__":
                         help="Set of max depths for the LZ78 tree, e.g., '4 8 12', tried in addition to not limiting the depth. Defaults to empty ")
     parser.add_argument("--revcomp_augment_factor", type=float, default=0.0, 
                         help="Ratio of reverse-complement sequences to add to the training data. Default is 0 (no augmentation).")
+    parser.add_argument("--class_ratios", type=float, nargs='+', required=False, default=[],
+                        help=("Set of class ratios for datasets with imbalanced classes, e.g., "
+                        "'1 10' means each epoch will consist of 1 negative and 10 positive samples. "
+                        "These need not sum to 1.0. Defaults to empty (no class weighting)."))
     args = parser.parse_args()
 
     include_prev_context = [s.lower() == 'true' for s in args.include_prev_context]
@@ -557,7 +606,7 @@ if __name__ == "__main__":
         preserve_kmer=args.shuffle_preserve_kmer
     )
 
-    print("Parsed hyperparameters:", hyperparams)
+    print("Parsed hyperparameters:", hyperparams, flush=True)
 
     main(
         dataset_folder=args.dataset_folder,
@@ -566,6 +615,7 @@ if __name__ == "__main__":
         test_metric=args.test_metric,
         hyperparams=hyperparams,
         num_threads=args.num_threads,
-        revcomp_augment_factor=args.revcomp_augment_factor
+        revcomp_augment_factor=args.revcomp_augment_factor,
+        target_class_ratios=args.class_ratios
     )
 

@@ -37,20 +37,20 @@ def main(
             "--num_threads", "32",
             "--validation_metric", metric,
             "--test_metric", metric,
-            "--revcomp_augment_factor", "0.2",
+            "--revcomp_augment_factor", "1",
+            "--class_ratios", "0",
             # "--augmentation_factors", "{0, 0.5, 1, 2}",
             # "--shuffle_preserve_kmer", "3",
-            "--max_depth", "4", "6"
+            # "--max_depth", "4", "6"
         ]
 
         try:
-            res = subprocess.run(cmd, stdout=subprocess.PIPE).stdout.decode('utf-8')
+            # pipe directly to the output file
+            with open(output_path, "w") as f:
+                subprocess.run(cmd, check=True, stdout=f, stderr=subprocess.STDOUT)
         except subprocess.CalledProcessError as e:
             print(f"Command output: {e.output.decode('utf-8')}")
             raise e
-        
-        with open(output_path, "w") as f:
-            f.write(res)
 
 if __name__ == "__main__":
     import argparse

@@ -50,7 +50,6 @@ def get_category_seqs(
             raise KeyError(f"Could not find path {cell_type}/{split}/{category} in {h5_path}") from e
 
         seqs_ds = grp['seqs']      # h5py dataset -> shape (N, L, 4)
-        # read into memory (if too big, see streaming example below)
         arr = seqs_ds[...]
         seqs = onehot_array_to_seqs(arr)
         return seqs
