@@ -26,24 +26,25 @@ def main(
             continue
 
         cmd = [
-            "python", "Train.py", "-dataset_folder", dataset_path,
+            "python", "Train_cleaned_up.py", "-dataset_folder", dataset_path,
             "-pretrain_file", pretrain_file,
-            "--include_prev_context", "{False}",
-            "--gamma", "{0.1, 0.33, 0.5, 0.75, 1, 3, 5}",
-            "--nb_train_iterations", "{1, 3, 5, 7, 10}",
-            "--ratio_pretrain_train", "{0}",
-            "--handle_n_setting", "{remove}",
-            "--ensemble_type", "{entropy}",
-            "--num_threads", "{32}",
-            # "--validation_metric", metric,
+            "--include_prev_context", "False",
+            "--gamma", "0.1", "0.33", "0.5", "0.75", "1", "3", "5",
+            "--nb_train_iterations", "1", "3", "5", "7", "10",
+            "--ratio_pretrain_train", "0",
+            "--handle_n_setting", "remove",
+            "--ensemble_type", "entropy",
+            "--num_threads", "32",
+            "--validation_metric", metric,
             "--test_metric", metric,
+            "--revcomp_augment_factor", "0.2",
             # "--augmentation_factors", "{0, 0.5, 1, 2}",
             # "--shuffle_preserve_kmer", "3",
-            "--max_depth", "{4, 6}"
+            "--max_depth", "4", "6"
         ]
 
         try:
-            res = subprocess.run(cmd, check=True, stdout=subprocess.PIPE).stdout.decode('utf-8')
+            res = subprocess.run(cmd, stdout=subprocess.PIPE).stdout.decode('utf-8')
         except subprocess.CalledProcessError as e:
             print(f"Command output: {e.output.decode('utf-8')}")
             raise e

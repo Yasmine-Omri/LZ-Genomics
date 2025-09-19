@@ -33,16 +33,20 @@ import math
 import itertools
 from memory_profiler import profile
 import os
+from sklearn.metrics import average_precision_score, roc_auc_score
 from ushuffle import shuffle, Shuffler
 from dataclasses import dataclass, field
 import argparse
+from sklearn.metrics import matthews_corrcoef, f1_score
 
 
 ALPHABET_SIZE = 4
+ENSEMBLE_N = 10
+BACKSHIFT_CTX_LEN = 20
 
 @dataclass
 class LZ78TrainConfig:
-    include_prev_contexts: bool
+    include_prev_context: bool
     handle_N_setting: str
     ratio_pretrain_train: float
     max_depth: int = field(default=None)
@@ -59,6 +63,25 @@ class HyperparameterSweep:
     max_depth: list[int]
     augmentation_factor: list[float]
     preserve_kmer: int = 2
+
+
+RCMAP = str.maketrans("ACGTN", "TGCAN")
+def revcomp(seq: str) -> str:
+    """Return the reverse complement of a DNA sequence."""
+    return seq.translate(RCMAP)[::-1]
+
+
+def augment_revcomp(train_data: pd.DataFrame, ratio: float=0.5, seed=42) -> pd.DataFrame:
+    if ratio == 0:
+        return train_data
+    for c in train_data["label"].unique():
+        class_data: pd.Series = train_data[train_data['label'] == c]
+        sampled_seqs = class_data.sample(frac=ratio, replace=False, random_state=seed)["sequence"]
+        # Create reverse complement sequences
+        revcomp_seqs = sampled_seqs.apply(revcomp)
+        # Append to the training data
+        train_data = pd.concat([train_data, pd.DataFrame({"sequence": revcomp_seqs, "label": c})])
+    return train_data
 
 
 #Pretraining the spa routine
@@ -91,7 +114,7 @@ def pretrain_spa(
             return
         # Compute log-loss for each label's SPA
         for index in range(len(spa)):
-            if not config.include_prev_contexts:
+            if not config.include_prev_context:
                 spa[index].reset_state()
             spa[index].train_on_block(encoded_seq)
 
@@ -102,7 +125,7 @@ def train_spa_oneIter(data, spa: list[LZ78SPA], config: LZ78TrainConfig):
         
         # Encode sequence
         encoded_seq = Sequence(seq, charmap=CharacterMap("ACGT"))
-        if not config.include_prev_contexts:
+        if not config.include_prev_context:
             spa[label].reset_state()
         spa[label].train_on_block(encoded_seq)
 
@@ -115,12 +138,12 @@ def train_spa(data, spa: list[LZ78SPA], iterations: int, config: LZ78TrainConfig
             
             # Encode sequence
             encoded_seq = Sequence(seq, charmap=CharacterMap("ACGT"))
-            if not config.include_prev_contexts:
+            if not config.include_prev_context:
                 spa[label].reset_state()
             spa[label].train_on_block(encoded_seq)
             
 
-def test_seq (data: pd.DataFrame, spas: list[LZ78SPA], metric, n_threads=32):
+def test_seq(data: pd.DataFrame, spas: list[LZ78SPA], compute_auc=False, n_threads=32):
     # for every test seq, run it through all spas
     # classification = label associated with lowest loss spa
     # check classification against ground truth
@@ -133,16 +156,21 @@ def test_seq (data: pd.DataFrame, spas: list[LZ78SPA], metric, n_threads=32):
         log_losses[i, :] = [res["avg_log_loss"] for res in spas[i].compute_test_loss_parallel(data, num_threads=n_threads)]
     classes = np.argmin(log_losses, axis=0)
 
-    if metric == "accuracy":    
-        return (classes == labels).sum() / len(labels)
-    if metric == "mcc":
-        from sklearn.metrics import matthews_corrcoef
-        return matthews_corrcoef(labels, classes)
-    if metric == "f1":
-        from sklearn.metrics import f1_score
-        return f1_score(labels, classes, average='weighted')
-    else:
-        raise ValueError("Invalid metric specified. Choose from 'accuracy', 'mcc', or 'f1'.")
+    results = {}
+    results["accuracy"] = (classes == labels).sum() / len(labels)
+    results["mcc"] = matthews_corrcoef(labels, classes)
+    results["f1"] = f1_score(labels, classes, average='weighted')
+
+    if compute_auc:
+        scores = compute_scores_matrix(data, spas, n_threads)   # (N, K)
+        per_auroc, per_auprc, macro_auroc, macro_auprc = ovr_auroc_auprc(labels, scores)
+        results.update({
+            "macro_auroc": macro_auroc,
+            "macro_auprc": macro_auprc,
+            "per_auroc": per_auroc,
+            "per_auprc": per_auprc
+        })
+    return results
 
 
 #Processes a sequence for its placeholders
@@ -178,7 +206,7 @@ def handle_N(data, setting="remove"):
     return pd.DataFrame(new_data)
 
 
-def augment(train_data, aug_factor, preserve_kmer=2):
+def augment_shuffle(train_data, aug_factor, preserve_kmer=2):
     if aug_factor == 0:
         return train_data
     pos_train = train_data[train_data['label'] != 0]
@@ -199,6 +227,46 @@ def augment(train_data, aug_factor, preserve_kmer=2):
     )
 
 
+def compute_scores_matrix(data_df: pd.DataFrame, spas: list[LZ78SPA], n_threads=32):
+    """
+    Returns scores with shape (N, K), where higher means more likely class.
+    We use negative avg_log_loss as a score.
+    """
+    seqs = [Sequence(s, charmap=CharacterMap("ACGT")) for s in data_df["sequence"]]
+    class_losses = []
+    for spa in spas:
+        # list of dicts -> extract avg_log_loss for each seq
+        class_losses.append([r["avg_log_loss"] for r in spa.compute_test_loss_parallel(seqs, num_threads=n_threads)])
+    losses = np.vstack(class_losses)         # (K, N)
+    scores = (-losses).T                     # (N, K)
+    return scores
+
+
+def ovr_auroc_auprc(y_true: np.ndarray, scores: np.ndarray):
+    """
+    One-vs-rest AUROC & AUPRC per class + macro means.
+    y_true: (N,) with int labels 0..K-1
+    scores: (N, K) with higher=more likely
+    """
+    y_true = np.asarray(y_true)
+    K = scores.shape[1]
+    per_cls_auroc, per_cls_auprc = [], []
+    for c in range(K):
+        y_bin = (y_true == c).astype(int)
+        s = scores[:, c]
+        # AUROC can error if only one class present; guard and return NaN
+        try:
+            auroc = roc_auc_score(y_bin, s)
+        except ValueError:
+            auroc = float("nan")
+        auprc = average_precision_score(y_bin, s)
+        per_cls_auroc.append(auroc)
+        per_cls_auprc.append(auprc)
+    macro_auroc = float(np.nanmean(per_cls_auroc))
+    macro_auprc = float(np.nanmean(per_cls_auprc))
+    return per_cls_auroc, per_cls_auprc, macro_auroc, macro_auprc
+
+
 @profile
 def main(
     dataset_folder: str,
@@ -206,7 +274,8 @@ def main(
     val_metric: str,
     test_metric: str,
     hyperparams: HyperparameterSweep,
-    num_threads: int = 32
+    num_threads: int = 32,
+    revcomp_augment_factor: float = 0.0
 ):
     read_data_in_time = time.perf_counter()
     
@@ -214,7 +283,6 @@ def main(
     train_path = f"{dataset_folder}/train.csv"
     val_path = f"{dataset_folder}/dev.csv"
     test_path = f"{dataset_folder}/test.csv"
-    
 
     train_data = pd.read_csv(train_path)
     validation_data = pd.read_csv(val_path)
@@ -237,6 +305,11 @@ def main(
     print(", ".join(results_df.columns))
     train_start_time = time.perf_counter()
 
+    assert hyperparams.handle_N_setting == ["remove"], "Only 'remove' setting is currently supported for handle_N_setting."
+     # Preprocess training and validation data to handle 'N's
+    train_data = augment_revcomp(handle_N(train_data, setting="remove"), ratio=revcomp_augment_factor)
+    validation_data = handle_N(validation_data, setting="remove")
+
     for include_prev_context, handle_N_setting, ratio_pretrain_train, aug_factor, max_depth in itertools.product(
         hyperparams.include_prev_context,
         hyperparams.handle_N_setting,
@@ -253,11 +326,8 @@ def main(
 
         old_train_data = train_data.copy()
 
-        train_data = handle_N(train_data, setting=handle_N_setting)
-        validation_data = handle_N(validation_data, setting=handle_N_setting)
-
         # Augment training data with shuffled positive sequences
-        train_data = augment(train_data, aug_factor, hyperparams.preserve_kmer)
+        train_data = augment_shuffle(train_data, aug_factor, hyperparams.preserve_kmer)
 
         nb_train_seqs = len(train_data)
         seq_len = len(train_data.iloc[0, 0])
@@ -275,9 +345,9 @@ def main(
             spa[i].set_inference_config(
                 lb=1e-5,
                 ensemble_type="entropy",
-                ensemble_n=10,
+                ensemble_n=ENSEMBLE_N,
                 backshift_parsing=True,
-                backshift_ctx_len=20,
+                backshift_ctx_len=BACKSHIFT_CTX_LEN,
                 backshift_break_at_phrase=True
             )
 
@@ -298,7 +368,9 @@ def main(
                 # Test on validation test to assess this combination of hyperparams
                     for index in range(len(spa)):
                         spa[index].set_inference_config(gamma=gamma, ensemble_type=ensemble)
-                    val_metric_value = test_seq(validation_data, spa, metric=val_metric, n_threads=num_threads)
+                    val_metric_value = test_seq(
+                        validation_data, spa, n_threads=num_threads, compute_auc=(val_metric in ["auroc", "auprc"])
+                    )["macro_" + val_metric if val_metric in ["auroc", "auprc"] else val_metric]
                     train_one_iter_end_time = time.perf_counter()
                     train_one_iter_duration = train_one_iter_end_time - train_one_iter_start_time
                 
@@ -353,9 +425,9 @@ def main(
         spa[i].set_inference_config(
             lb=1e-5,
             ensemble_type=best_ensemble_type,
-            ensemble_n=10,
+            ensemble_n=ENSEMBLE_N,
             backshift_parsing=True,
-            backshift_ctx_len=20,
+            backshift_ctx_len=BACKSHIFT_CTX_LEN,
             backshift_break_at_phrase=True
         )
 
@@ -381,10 +453,21 @@ def main(
     inference_start_time = time.perf_counter()
 
     test_data = handle_N(test_data)
-    test_metric_value = test_seq(test_data, spa, metric=test_metric, n_threads=num_threads)
+    test_metric_values = test_seq(
+        test_data, spa, n_threads=num_threads, compute_auc=(test_metric in ["auroc", "auprc"])
+    )
+    test_metric_processed = "macro_auroc" if test_metric == "auroc" else "macro_auprc" if test_metric == "auprc" else test_metric
+    test_metric_value = test_metric_values[test_metric_processed]
 
     inference_end_time = time.perf_counter()
     print(f"Final metric ({test_metric}) with best hyperparameters: {(test_metric_value*100):.2f}")
+
+    # print all other metrics too
+    for metric in test_metric_values:
+        if metric == test_metric_processed:
+            continue
+        print(f"Final metric ({metric}) with best hyperparameters: {(test_metric_values[metric]*100):.2f}")
+
         
     inference_duration = inference_end_time - inference_start_time
 
@@ -395,7 +478,8 @@ def main(
         print(f"Mem in MB: {len(spa_bytes) / (1024 * 1024):.2f}", flush=True)
         makedirs("best_spas", exist_ok=True)
         # Extract the part after 'GUE/' and replace slashes with underscores
-        binary_file_name = dataset_folder.split("GUE/", 1)[-1].replace("/", "_")
+        # binary_file_name = dataset_folder.split("GUE/", 1)[-1].replace("/", "_")
+        binary_file_name = "_".join(dataset_folder.split("/")[-3:])
         
         # Create the full path for the binary file
         binary_file_path = os.path.join("best_spas/", f"{binary_file_name}_{label}.bin")
@@ -442,10 +526,10 @@ if __name__ == "__main__":
     parser.add_argument("--num_threads", type=int, required=True,
                         help="Number of threads to compute on in parallel'")
     parser.add_argument("--validation_metric", type=str, default="accuracy",
-                        choices=["accuracy", "mcc", "f1"],
+                        choices=["accuracy", "mcc", "f1", "auroc", "auprc"],
                         help="Metric to use for validation, default is 'accuracy'")
     parser.add_argument("--test_metric", type=str, default="accuracy",
-                        choices=["accuracy", "mcc", "f1"],
+                        choices=["accuracy", "mcc", "f1", "auroc", "auprc"],
                         help="Metric to use for validation, default is 'accuracy'")
     parser.add_argument("--augmentation_factors", type=float, nargs='+', required=False, default=[0],
                         help=("Set of augmentation factors for adding shuffled versions of the positive "
@@ -455,6 +539,8 @@ if __name__ == "__main__":
                         help="Preserve k-mer frequncies when shuffling sequences")
     parser.add_argument("--max_depth", type=int, nargs='+', required=False, default=[],
                         help="Set of max depths for the LZ78 tree, e.g., '4 8 12', tried in addition to not limiting the depth. Defaults to empty ")
+    parser.add_argument("--revcomp_augment_factor", type=float, default=0.0, 
+                        help="Ratio of reverse-complement sequences to add to the training data. Default is 0 (no augmentation).")
     args = parser.parse_args()
 
     hyperparams = HyperparameterSweep(
@@ -475,6 +561,7 @@ if __name__ == "__main__":
         val_metric=args.validation_metric,
         test_metric=args.test_metric,
         hyperparams=hyperparams,
-        num_threads=args.num_threads
+        num_threads=args.num_threads,
+        revcomp_augment_factor=args.revcomp_augment_factor
     )
 
