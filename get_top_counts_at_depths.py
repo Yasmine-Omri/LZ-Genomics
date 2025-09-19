@@ -35,7 +35,7 @@ if __name__ == "__main__":
     parser.add_argument("--spa_path", type=str, required=True, help="Path to the .bin spa file")
     parser.add_argument("--min_depth", type=int, required=True, help="Minimum depth")
     parser.add_argument("--max_depth", type=int, required=True, help="Maximum depth")
-    parser.add_argument("--topk", type=int, required=True, help="Top K sequences to retrieve")
+    parser.add_argument("--topk", type=int, required=False, default=None, help="Top K sequences to retrieve")
     
     # Parse arguments
     args = parser.parse_args()
