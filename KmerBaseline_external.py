@@ -199,10 +199,11 @@ def write_fasta_from_sequences(seq_iterable, out_path):
         for i, s in enumerate(seq_iterable):
             fh.write(f">bg_{i}\n{s}\n")
 
-def collect_pretrain_sequences(pretrain_csv, csv_col=None,
+
+def collect_pretrain_sequences(pretrain_fasta, pretrain_csv, csv_col=None,
                                chunk_len: int = 0, chunk_stride: int = 0):
     """
-    Yield sequences from CSV.
+    Yield sequences from FASTA or CSV.
     - FASTA: streams records, optionally chunked
     - CSV: uses csv_col if provided; else auto-detect string-like column; optionally chunk if single long row
     """
@@ -216,6 +217,26 @@ def collect_pretrain_sequences(pretrain_csv, csv_col=None,
             return
         for i in range(0, L - chunk_len + 1, stride):
             yield seq[i:i+chunk_len]
+
+
+    if pretrain_fasta:
+        seq = []
+        with open(pretrain_fasta, "r") as fh:
+            for line in fh:
+                line = line.strip()
+                if not line:
+                    continue
+                if line.startswith(">"):
+                    if seq:
+                        full = "".join(seq).upper()
+                        for ch in _yield_chunks(full): yield ch
+                        seq = []
+                else:
+                    seq.append(line)
+            if seq:
+                full = "".join(seq).upper()
+                for ch in _yield_chunks(full): yield ch
+        return
 
     if pretrain_csv:
         df = pd.read_csv(pretrain_csv)
@@ -410,6 +431,8 @@ def main():
     # empirical background prior
     ap.add_argument("--use_empirical_prior", default="auto",
                     help="auto|True|False. If auto and pretrain provided, use prior; if True, require pretrain; if False, disable.")
+
+    ap.add_argument("--pretrain_fasta", default=None, help="Path to unlabeled DNA FASTA (optional).")
     ap.add_argument("--pretrain_csv", default=None, help="Path to unlabeled CSV with a sequence column (optional).")
     ap.add_argument("--pretrain_csv_col", default=None, help="CSV column name containing sequences.")
     ap.add_argument("--pretrain_chunk_len", type=int, default=0,
@@ -434,6 +457,10 @@ def main():
 
     args = ap.parse_args()
 
+
+    # -------- timing: start of data read (to mirror Train.py) --------
+    read_data_in_time = time.perf_counter()
+
     # parse lists
     ks = sorted(int(x) for x in parse_list(args.ks))
     alphas = sorted(float(x) for x in parse_list(args.alphas))
@@ -448,28 +475,31 @@ def main():
     use_empirical = str(args.use_empirical_prior).lower()
     if use_empirical not in ("auto","true","false"):
         raise ValueError("--use_empirical_prior must be auto|True|False")
-    have_pretrain = bool(args.pretrain_csv)
+    have_pretrain = bool(args.pretrain_fasta or args.pretrain_csv)
     if use_empirical == "auto":
         use_empirical = "true" if have_pretrain else "false"
     if use_empirical == "true" and not have_pretrain:
-        raise ValueError("--use_empirical_prior True was set but no --pretrain_csv provided.")
-
-    read_data_in_time = time.perf_counter()
+        raise ValueError("--use_empirical_prior True was set but no --pretrain_fasta/--pretrain_csv provided.")
 
     # load splits
     dpath = args.dataset_folder
     train_path = os.path.join(dpath, "train.csv")
-    val_path  = os.path.join(dpath, "dev.csv")
-    test_path = os.path.join(dpath, "test.csv")
+    test_path  = os.path.join(dpath, "test.csv")
+    verify_path = (os.path.join(dpath, "verify.csv")
+                   if os.path.exists(os.path.join(dpath, "verify.csv"))
+                   else os.path.join(dpath, "dev.csv") if os.path.exists(os.path.join(dpath, "dev.csv")) else None)
 
     train = pd.read_csv(train_path)
-    val  = pd.read_csv(val_path)
+    test  = pd.read_csv(test_path)
+    verify = pd.read_csv(verify_path) if verify_path else None
 
     # N handling (DNA only)
     train = handle_N_df(train, handle_setting)
-    val  = handle_N_df(val, handle_setting)
+    test  = handle_N_df(test, handle_setting)
+    if verify is not None:
+        verify = handle_N_df(verify, handle_setting)
 
-    # -------- training start time  --------
+    # -------- training start time (mirrors Train.py) --------
     print("-----TRAINING")
     train_start_time = time.perf_counter()
 
@@ -493,7 +523,7 @@ def main():
                     def _bg_stream():
                         skipped = 0
                         for s in collect_pretrain_sequences(
-                                args.pretrain_csv,
+                                args.pretrain_fasta, args.pretrain_csv,
                                 args.pretrain_csv_col,
                                 args.pretrain_chunk_len, args.pretrain_chunk_stride):
                             # apply same N policy as train; also ensure DNA content
@@ -559,10 +589,10 @@ def main():
             model.fit_from_counts(class_counts)
             t_train1 = time.perf_counter()
 
-        #Validate
+        # TEST evaluation
         t_test0 = time.perf_counter()
-        y_true = list(val["label"].astype(int).values)
-        y_pred = model.predict_df(val)
+        y_true = list(test["label"].astype(int).values)
+        y_pred = model.predict_df(test)
         acc = accuracy(y_true, y_pred)
         mcc = mcc_multiclass(y_true, y_pred)
         f1 = f1_score(y_true, y_pred, average="macro")

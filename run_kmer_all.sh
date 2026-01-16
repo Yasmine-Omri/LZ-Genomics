@@ -3,13 +3,14 @@ set -euo pipefail
 set +o braceexpand   # avoid accidental {a,b} expansion
 
 # ----------- USER KNOBS -----------
-OUTPUT_DIR="${OUTPUT_DIR:-./kmer_train_reports_GC_content_only}"  # output folder
+OUTPUT_DIR="${OUTPUT_DIR:-./kmer_train_reports_acc_pretrain}"
 TOOL="${TOOL:-jellyfish}"                  # jellyfish | kmc3 | squeakr
 JOBS="${JOBS:-1}"                          # parallel datasets
 SKIP_IF_EXISTS="${SKIP_IF_EXISTS:-0}"      # 1=skip if report exists, 0=overwrite
 
 # Hyperparameter sweeps (space-separated; Python accepts both styles too)
-KS="${KS:-1}"
+KS="${KS:-3 6 9 12 15 19}"
+# KS="${KS:-3 4 5 6}"
 ALPHAS="${ALPHAS:-0.5 1.0}"
 FEATURE_MODE="${FEATURE_MODE:-count}"
 CANONICAL="${CANONICAL:-True}"
@@ -18,6 +19,7 @@ SELECT_BY="${SELECT_BY:-acc}"              # acc | mcc
 
 # Empirical background prior (optional)
 USE_EMPIRICAL_PRIOR="${USE_EMPIRICAL_PRIOR:-False}"  # auto|True|False
+PRETRAIN_FASTA="${PRETRAIN_FASTA:-}"                # path to unlabeled DNA FASTA (or empty)
 PRETRAIN_CSV="${PRETRAIN_CSV:-}"                    # path to unlabeled CSV (or empty)
 PRETRAIN_CSV_COL="${PRETRAIN_CSV_COL:-}"            # column name in CSV
 PRETRAIN_CHUNK_LEN="${PRETRAIN_CHUNK_LEN:-0}"       # chunk windows if single long sequence
@@ -83,7 +85,6 @@ declare -A DATASET_OUTPUTS=(
 
 )
 
-# KMER_SCRIPT="${KMER_SCRIPT:-./KmerBaseline_external.py}"
 KMER_SCRIPT="${KMER_SCRIPT:-./KmerBaseline_rust.py}"
 
 
@@ -116,6 +117,7 @@ for DATASET_FOLDER in "${!DATASET_OUTPUTS[@]}"; do
       )
 
   # prior inputs (optional)
+  if [[ -n "${PRETRAIN_FASTA}" ]]; then CMD+=( --pretrain_fasta "$PRETRAIN_FASTA" ); fi
   if [[ -n "${PRETRAIN_CSV}" ]]; then CMD+=( --pretrain_csv "$PRETRAIN_CSV" ); fi
   if [[ -n "${PRETRAIN_CSV_COL}" ]]; then CMD+=( --pretrain_csv_col "$PRETRAIN_CSV_COL" ); fi
   CMD+=( --pretrain_chunk_len "$PRETRAIN_CHUNK_LEN" --pretrain_chunk_stride "$PRETRAIN_CHUNK_STRIDE" )
@@ -137,8 +139,6 @@ for DATASET_FOLDER in "${!DATASET_OUTPUTS[@]}"; do
 
   printf 'RUN:'; printf ' %q' "${CMD[@]}"; printf ' > %q\n' "$OUTFILE"
   sem "$JOBS" "${CMD[@]}" > "$OUTFILE" 2>&1
-  # # FIXME: debug
-  # ${CMD[@]}
 done
 
 wait

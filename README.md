@@ -1,17 +1,22 @@
 # Genomic Data Classification via Universal Compression
 
-Efficient and accurate DNA sequence classification is a crucial task in genomic data analysis. In this work, we propose a lossless compression approach to DNA classification, as a lightweight alternative to computationally intensive state-of-the-art models like DNABERT-2. Leveraging the equivalence between data compression and sequential probability assignments from information theory, we construct an LZ78 classifier and optimize its performance through hyperparameter tuning. 
-Experimental results on 28 datasets from the Genomic Understanding Evaluation (GUE) suite demonstrate competitive results while drastically reducing computational costs. Unlike DNABert2, which was trained on tens of GBs of unlabeled data for 14 days on 8 NVIDIA RTX 2080Ti GPUs, our LZ78 classifier is capable of training in one hour or less on a standard CPU using a fraction of the training data. It also offers up to three orders of magnitude speedup in inference time and a dramatic decrease in training memory. These results highlight the potential of the LZ78 algorithm for scalable and efficient genomic data classification, particularly in resource-constrained environments. 
-Additionally, we open-source a streamlined pipeline to enable further exploration of compression-based classification for genomics and beyond. Future work aims to enhance its robustness and extend its applicability to more complex genomic tasks.
 
-This codebase is associated with our [paper](https://doi.org/10.21203/rs.3.rs-6363017/v1) and more details can be found there. 
+Efficient and accurate DNA sequence classification is a crucial task in genomic data analysis.
+In this work, we construct a lightweight DNA classifier based on the LZ78 lossless universal compressor, and optimize its performance through hyperparameter tuning.
+This classifier outperforms the state-of-the-art DNABERT-2 model on the Genomic Understanding Evaluation suite, while drastically reducing computational costs.
+Unlike DNABERT-2, which requires two weeks of multi-GPU training, our classifier can be trained in about 30 minutes or less on a modern CPU with a fraction of the training data. It also offers up to 128× inference time speedup.
+Across GUE, Genomic Benchmarks, BEND, DART-Eval, and GUE+, this classifier is competitive on a broad range of tasks, and consistently surpasses leading genomic language models by large margins on the challenging Epigenetic Mark Prediction (EMP) tasks. We also benchmark computational efficiency against DNABERT-2 (a state-of-the-art, parameter-efficient gLM): our CPU-only training completes in minutes with a fraction of the data, and inference is up to 128x faster. We establish that our LZ78-based classifier provides a fast, data-frugal, CPU-only alternative for composition-driven genomic classification, complementing genomic language models and reserving their capacity for sparse, position-specific motif-dominated tasks. Additionally, we open-source our pipeline for compression-based classification.
+Future work aims to enhance its robustness and extend its applicability to more complex genomic tasks.
+
+An interactive comparison of our performance on GUE relative to other gLMs can be accessed here: https://yasmine-omri.github.io/LZ-Genomics/
+<!-- This codebase is associated with our [paper](https://doi.org/10.21203/rs.3.rs-6363017/v1) and more details can be found there.  -->
 
 <p align="center">
     <img src="imgs/spa_as_classifier.png" alt="Description" width="600">
 </p>
 
 <p align="center">
-    <img src="imgs/AccuracyRadarMinSingle.png" alt="Description" width="600">
+    <img src="imgs/updated_radar.png" alt="Description" width="600">
 </p>
 
 
