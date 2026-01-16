@@ -1,4 +1,20 @@
 '''
+DART EVAL:
+
+- dataset_folder : /Users/yasmineomri/Documents/EE376C/lz78_rust/repo/rebuttal_bench/data/task_1_ccre/csvs_lz78
+- test_paired_path : /Users/yasmineomri/Documents/EE376C/lz78_rust/repo/rebuttal_bench/data/task_1_ccre/csvs_lz78/test_with_pair_id.csv
+- added definition for paired accuracy
+- how to handle N?
+- Usage:
+
+# Example Usage of Train.py
+DATASET_FOLDER = "/Users/yasmineomri/Documents/EE376C/lz78_rust/repo/rebuttal_bench/data/task_1_ccre/csvs_lz78"
+
+python Train.py -dataset_folder "$DATASET_FOLDER" -pretrain_file "$PRETRAIN_FILE" --include_prev_context "{False}" --gamma "{0.1, 0.33, 0.5, 0.75, 1, 3, 5}" --nb_train_iterations "{1, 3, 5, 7, 10}" --ratio_pretrain_train "{0}"\ --handle_n_setting "{remove}" --ensemble_type "{entropy}" --num_threads "{64}" > "$OUTPUT_DIR/$OUTPUT_FILE"
+'''
+
+
+'''
 This script is used to run the pre-train, train, validate, test framework for the LZ78-based classifier for a given dataset.
 The framework is highly configurable and outputs a detailed report including accuracy numbers and time/memory profiling.
 
@@ -10,20 +26,24 @@ INPUTS:
 
 OUTPUTS:
 - Detailed printed report including: 
-    * VALIDATION METRIC for each combination of hyperparameters tested
-    * Hyperparameter Combination producing the highest VALIDATION METRIC
-    * Test metric (on test dataset) of the best SPAs
+    * Validation accuracy for each combination of hyperparameters tested
+    * Hyperparameter Combination producing the highest validation accuracy
+    * Test accuracy (on test dataset) of the best SPAs
     * Depth of the trees corresponding to the best SPAs
     * Computational metrics
-- Best SPAs (highest VALIDATION METRIC) saved as .bin files to be used for inference or further analysis.
+- Best SPAs (highest validation accuracy) saved as .bin files to be used for inference or further analysis.
 
 EXAMPLE USAGE:
 
 python Train.py -dataset_folder "$DATASET_FOLDER" -pretrain_file "$PRETRAIN_FILE" --include_prev_context "{False}" --gamma "{0.1, 0.33, 0.5, 0.75, 1, 3, 5}" --nb_train_iterations "{1, 3, 5, 7, 10}" --ratio_pretrain_train "{0}"\ --handle_n_setting "{remove}" --ensemble_type "{entropy}" --num_threads "{64}" > "$OUTPUT_DIR/$OUTPUT_FILE"
 '''
 
-from lz78 import Sequence, CharacterMap, LZ78SPA
+from lz78 import Sequence, LZ78Encoder, CharacterMap, BlockLZ78Encoder, LZ78SPA
+from lz78 import encoded_sequence_from_bytes, spa_from_bytes
 import numpy as np
+import lorem
+import requests
+from sys import stdout
 from os import makedirs
 import time
 import pandas as pd
@@ -33,7 +53,7 @@ import math
 import itertools
 from memory_profiler import profile
 import os
-from ushuffle import shuffle, Shuffler
+
 
 
 # Training hyperparameters:
@@ -46,11 +66,43 @@ HANDLE_N_SETTING = None
 RATIO_PRETRAIN_TRAIN = None # nb of pretrained sequences / nb train sequences
 ENSEMBLE_TYPE = None
 NUM_THREADS = None
-MAX_DEPTHS = None
+
 
 import argparse
 
+#--added for DART-EVAL
+def predict_scores(data: pd.DataFrame, spas: list[LZ78SPA], n_threads=32):
+    seqs = [Sequence(s, charmap=CharacterMap("ACGT")) for s in data["sequence"]]
+    # losses[i] = avg_log_loss under spa i
+    losses = []
+    for spa in spas:
+        losses.append([res["avg_log_loss"] for res in spa.compute_test_loss_parallel(seqs, num_threads=n_threads)])
+    losses = np.vstack(losses)   # shape: (num_classes, N)
+    # margin score: bigger means "more likely class 1"
+    if losses.shape[0] != 2:
+        raise ValueError("Paired accuracy defined for binary task; got {} classes".format(losses.shape[0]))
+    scores = losses[0] - losses[1]
+    return scores  # array length N
 
+def paired_accuracy(csv_with_pair_id_path, spas, n_threads=32):
+    df = pd.read_csv(csv_with_pair_id_path)
+    df = handle_N(df)
+
+    scores = predict_scores(df, spas, n_threads)
+    df = df.assign(score=scores)
+    wins = 0; total = 0
+    for pid, g in df.groupby("pair_id"):
+        if len(g) != 2:  # safety
+            continue
+        # require one pos, one neg
+        pos = g[g["label"]==1]["score"].values
+        neg = g[g["label"]==0]["score"].values
+        if len(pos)==1 and len(neg)==1:
+            wins += int(pos[0] > neg[0])
+            total += 1
+    return wins/total if total else float("nan")
+
+#--
 def parse_set(input_str):
     """
     Converts a comma-separated string into a Python set.
@@ -145,30 +197,19 @@ def train_spa(data, spa, iterations):
             
     return logloss_per_label
 
-def test_seq (data: pd.DataFrame, spas: list[LZ78SPA], metric, n_threads=32):
+def test_seq (data: pd.DataFrame, spas: list[LZ78SPA], n_threads=32):
     # for every test seq,
     # run it through all spas
     # classification = label associated with lowest loss spa
     # check classification against ground truth
-    # compute metric (of all test runs)
+    # compute accuracy (of all test runs)
     labels = data["label"]
     data = [Sequence(seq, charmap=CharacterMap("ACGT")) for seq in data["sequence"]]
     log_losses = np.zeros((len(spas), len(data)))
     for i in range(len(spas)):
         log_losses[i, :] = [res["avg_log_loss"] for res in spas[i].compute_test_loss_parallel(data, num_threads=n_threads)]
     classes = np.argmin(log_losses, axis=0)
-
-    if metric == "accuracy":    
-        return (classes == labels).sum() / len(labels)
-    if metric == "mcc":
-        from sklearn.metrics import matthews_corrcoef
-        return matthews_corrcoef(labels, classes)
-    if metric == "f1":
-        from sklearn.metrics import f1_score
-        return f1_score(labels, classes, average='weighted')
-    else:
-        raise ValueError("Invalid metric specified. Choose from 'accuracy', 'mcc', or 'f1'.")
-
+    return (classes == labels).sum() / len(labels)
 
 #Processes a sequence for its placeholders
 def process_sequence(sequence, setting="remove", n=10):
@@ -196,14 +237,16 @@ def handle_N(data, setting="remove"):
     for _, row in data.iterrows():
         sequence, label = row['sequence'], row['label']
         processed_sequences = process_sequence(sequence, setting)
+
+        other_keys = {k: v for k, v in row.items() if k not in ['sequence', 'label']}
         
         for proc_seq in processed_sequences:
-            new_data.append({"sequence": proc_seq, "label": label})
+            new_data.append({"sequence": proc_seq, "label": label, **other_keys})
 
     return pd.DataFrame(new_data)
 
 @profile
-def main(dataset_folder, pretrain_file, val_metric, test_metric):
+def main(dataset_folder, pretrain_file):
     global INCLUDE_PREV_CONTEXT
     global GAMMA
     global NB_TRAIN_ITERATIONS 
@@ -219,9 +262,6 @@ def main(dataset_folder, pretrain_file, val_metric, test_metric):
     global ratio_pretrain_train
     global ensemble_type
     global num_threads
-    global augmentation_factors
-    global preserve_kmer
-    global max_depth
 
     read_data_in_time = time.perf_counter()
     
@@ -244,15 +284,15 @@ def main(dataset_folder, pretrain_file, val_metric, test_metric):
     # Test all on validation set, return best SPA
     results_df = pd.DataFrame(columns=[
     "INCLUDE_PREV_CONTEXT", "GAMMA", "NB_TRAIN_ITERATIONS", 
-    "HANDLE_N_SETTING", "RATIO_PRETRAIN_TRAIN", "ENSEMBLE_TYPE", "NUM_THREADS", "VALIDATION METRIC"
+    "HANDLE_N_SETTING", "RATIO_PRETRAIN_TRAIN", "ENSEMBLE_TYPE", "NUM_THREADS", "VALIDATION ACCURACY"
     ])
 
     print("-----TRAINING")
     print("---SEARCH FOR BEST SPA(s)")
-    print(f"nb_iterations, aug_factor, gamma, include_prev_context, handle_N_setting, ratio, ensemble_type, max_depth, num_threads, time taken, {val_metric}", flush=True)
+    print("nb_iterations , gamma, include_prev_context, handle_N_setting, ratio, ensemble type, num_threads, time taken, accuracy", flush=True)
     train_start_time = time.perf_counter()
-    for include_prev_context, handle_N_setting, ratio, aug_factor, max_depth in itertools.product(
-        include_prev_contexts, handle_N_settings, ratio_pretrain_train, augmentation_factors, max_depth
+    for include_prev_context, handle_N_setting, ratio in itertools.product(
+        include_prev_contexts, handle_N_settings, ratio_pretrain_train
     ):  
         INCLUDE_PREV_CONTEXT = include_prev_context
         GAMMA = gammas
@@ -261,37 +301,16 @@ def main(dataset_folder, pretrain_file, val_metric, test_metric):
         RATIO_PRETRAIN_TRAIN = ratio 
         ENSEMBLE_TYPE = ensemble_type
         NUM_THREADS = num_threads
-        MAX_DEPTH = max_depth
-
-        old_train_data = train_data.copy()
-
+        
         train_data = handle_N(train_data, setting=HANDLE_N_SETTING)
         validation_data = handle_N(validation_data, setting=HANDLE_N_SETTING)
-
-        # Augment training data with shuffled positive sequences
-        pos_train = train_data[train_data['label'] != 0]
-        new_negatives_train = []
-        for sample in pos_train["sequence"]:
-            sample = sample.lower().encode('utf-8')
-            shuffler = Shuffler(sample, preserve_kmer)
-            if aug_factor < 1:
-                if random.random() < aug_factor:
-                    # print("bye", shuffler.shuffle())
-                    new_negatives_train.append([shuffler.shuffle().decode('utf-8').upper(), 0])
-                continue
-            for _ in range(int(aug_factor)):
-                new_negatives_train.append([shuffler.shuffle().decode('utf-8').upper(), 0])
-        train_data = pd.concat(
-            [train_data, pd.DataFrame(new_negatives_train, columns=['sequence', 'label'])],
-            ignore_index=True
-        )
-
         nb_train_seqs = len(train_data)
         seq_len = len(train_data.iloc[0, 0])
         nb_train_symbols = nb_train_seqs * seq_len
         
         # Create list of spas based on number of labels: (spa_0 and spa_1 for labels 0, 1)
-        spa = [LZ78SPA(alphabet_size=ALPHABET_SIZE, compute_training_loss=False, max_depth=int(MAX_DEPTH) if MAX_DEPTH else None) for _ in unique_labels]
+        #spa = [LZ78SPA(alphabet_size=ALPHABET_SIZE, compute_training_loss=False) for _ in unique_labels]
+        spa = [LZ78SPA(alphabet_size=ALPHABET_SIZE, compute_training_loss=False,  max_depth=args.max_depth if args.max_depth is not None else None) for _ in unique_labels]
         for i in range(len(unique_labels)):
             spa[i].set_inference_config(
                 lb=1e-5,
@@ -319,11 +338,12 @@ def main(dataset_folder, pretrain_file, val_metric, test_metric):
                 # Test on validation test to assess this combination of hyperparams
                     for index in range(len(spa)):
                         spa[index].set_inference_config(gamma=gamma, ensemble_type=ensemble)
-                    val_metric_value = test_seq(validation_data, spa, metric=val_metric, n_threads=NUM_THREADS)
+                    accuracy = test_seq(validation_data, spa, num_threads)
                     train_one_iter_end_time = time.perf_counter()
                     train_one_iter_duration = train_one_iter_end_time - train_one_iter_start_time
-                    print(f"{nb_iterations}, {aug_factor}, {gamma}, {include_prev_context}, {handle_N_setting}, {ratio}, {ensemble}, {max_depth}, {NUM_THREADS}, {train_one_iter_duration:.3f}, {(val_metric_value * 100):.2f}", flush=True)
+                    print(f"{nb_iterations}, {gamma}, {include_prev_context}, {handle_N_setting}, {ratio}, {ensemble}, {NUM_THREADS}, {train_one_iter_duration:.3f}, {(accuracy * 100):.2f}", flush=True)
 
+                
                 
                     current_result = pd.DataFrame([{
                         "INCLUDE_PREV_CONTEXT": INCLUDE_PREV_CONTEXT,
@@ -332,11 +352,9 @@ def main(dataset_folder, pretrain_file, val_metric, test_metric):
                         "HANDLE_N_SETTING": HANDLE_N_SETTING,
                         "RATIO_PRETRAIN_TRAIN": RATIO_PRETRAIN_TRAIN,
                         "ENSEMBLE_TYPE": ensemble,
-                        "MAX_DEPTH": MAX_DEPTH if MAX_DEPTH else 0,
                         "NUM_THREADS": NUM_THREADS,
                         "TRAINING_TIME": train_one_iter_duration, 
-                        "VALIDATION METRIC": val_metric_value,
-                        "AUGMENTATION_FACTOR": aug_factor,
+                        "VALIDATION ACCURACY": accuracy
                     }])
 
                 # Concatenate the current result with results_df
@@ -344,11 +362,11 @@ def main(dataset_folder, pretrain_file, val_metric, test_metric):
                 current_result = current_result.dropna(axis=1, how='all')
 
                 results_df = pd.concat([results_df, current_result], ignore_index=True)
-        train_data = old_train_data.copy()  # Reset train_data to original state after each hyperparameter combination
+
     
-    # Find the best hyperparameter combination based on the highest validation metric
+    # Find the best hyperparameter combination based on the highest accuracy
     print("---BEST SPA(s) FOUND")
-    best_row = results_df.loc[results_df['VALIDATION METRIC'].idxmax()]
+    best_row = results_df.loc[results_df['VALIDATION ACCURACY'].idxmax()]
     best_params = best_row.to_dict()
     print("Best hyperparameters:", best_params)
 
@@ -359,12 +377,9 @@ def main(dataset_folder, pretrain_file, val_metric, test_metric):
     RATIO_PRETRAIN_TRAIN = best_params["RATIO_PRETRAIN_TRAIN"]
     ENSEMBLE_TYPE = best_params["ENSEMBLE_TYPE"]
     NUM_THREADS = best_params["NUM_THREADS"]
-    MAX_DEPTH = int(best_params["MAX_DEPTH"])
-    if MAX_DEPTH == 0:
-        MAX_DEPTH = None
 
     # Retrain our best SPAs and use that to test on test data 
-    spa = [LZ78SPA(alphabet_size=ALPHABET_SIZE, gamma= GAMMA, compute_training_loss=False, max_depth=MAX_DEPTH) for _ in unique_labels]
+    spa = [LZ78SPA(alphabet_size=ALPHABET_SIZE, gamma= GAMMA, compute_training_loss=False, max_depth=args.max_depth if args.max_depth is not None else None) for _ in unique_labels]
     for i in range(len(unique_labels)):
         spa[i].set_inference_config(
             lb=1e-5,
@@ -397,10 +412,15 @@ def main(dataset_folder, pretrain_file, val_metric, test_metric):
     inference_start_time = time.perf_counter()
 
     test_data = handle_N(test_data)
-    test_metric_value = test_seq(test_data, spa, metric=test_metric, n_threads=NUM_THREADS)
+    test_accuracy = test_seq(test_data, spa, NUM_THREADS)
 
     inference_end_time = time.perf_counter()
-    print(f"Final metric ({test_metric}) with best hyperparameters: {(test_metric_value*100):.2f}")
+    print(f"Final accuracy with best hyperparameters: {(test_accuracy*100):.2f}")
+    
+    #--paired accuracy
+    test_with_pairs = os.path.join(dataset_folder, "test_with_pair_id.csv")
+    pacc = paired_accuracy(test_with_pairs, spa, NUM_THREADS)
+    print(f"Paired accuracy: {pacc*100:.2f}")
         
     inference_duration = inference_end_time - inference_start_time
 
@@ -411,8 +431,8 @@ def main(dataset_folder, pretrain_file, val_metric, test_metric):
         print(f"Mem in MB: {len(spa_bytes) / (1024 * 1024):.2f}", flush=True)
         makedirs("best_spas", exist_ok=True)
         # Extract the part after 'GUE/' and replace slashes with underscores
-        binary_file_name = dataset_folder.split("GUE/", 1)[-1].replace("/", "_")
-        
+        #binary_file_name = dataset_folder.split("GUE/", 1)[-1].replace("/", "_")
+        binary_file_name = "task1"
         # Create the full path for the binary file
         binary_file_path = os.path.join("best_spas/", f"{binary_file_name}_{label}.bin")
         label += 1
@@ -441,6 +461,7 @@ if __name__ == "__main__":
     #Parse all arguments
     parser = argparse.ArgumentParser(description="Script for training and testing SPA model")
 
+    parser.add_argument("--max_depth", type=int, default=None, help="Max tree depth (None = unlimited).")
     parser.add_argument("-dataset_folder", type=str, required=True, help="Path to the dataset folder")
     parser.add_argument("-pretrain_file", type=str, required=True, help="Path to the pretraining file")
     parser.add_argument("--include_prev_context", type=str, required=True,
@@ -457,20 +478,6 @@ if __name__ == "__main__":
                         help="Set of values for ENSEMBLE_TYPE e.g., '{depth,entropy}'")
     parser.add_argument("--num_threads", type=str, required=True,
                         help="Number of threads to compute on in parallel'")
-    parser.add_argument("--validation_metric", type=str, default="accuracy",
-                        choices=["accuracy", "mcc", "f1"],
-                        help="Metric to use for validation, default is 'accuracy'")
-    parser.add_argument("--test_metric", type=str, default="accuracy",
-                        choices=["accuracy", "mcc", "f1"],
-                        help="Metric to use for validation, default is 'accuracy'")
-    parser.add_argument("--augmentation_factors", type=str, required=False, default="{0}",
-                        help=("Set of augmentation factors for adding shuffled versions of the positive "
-                        "sequences to the negative training examples, e.g., '{0, 0.5, 1}'"
-                        ))
-    parser.add_argument("--shuffle_preserve_kmer", type=int, default=2,
-                        help="Preserve k-mer frequncies when shuffling sequences")
-    parser.add_argument("--max_depth", type=str, required=False, default="{}",
-                        help="Set of max depths for the LZ78 tree, e.g., {4, 8, 12}., tried in addition to not limiting the depth. Defaults to empty ")
     args = parser.parse_args()
 
     # Convert string inputs to Python sets
@@ -488,15 +495,9 @@ if __name__ == "__main__":
 
     ensemble_type = parse_set(args.ensemble_type)
 
-    augmentation_factors = parse_set(args.augmentation_factors)
-    preserve_kmer = args.shuffle_preserve_kmer
-    print(f"Preserving k-mer frequencies: {preserve_kmer}")
-
     num_threads = parse_set(args.num_threads)
     num_threads = int(list(num_threads)[0])
 
-    max_depth = [None] + [int(x) for x in list(parse_set(args.max_depth))]
-
-    main(args.dataset_folder, args.pretrain_file, args.validation_metric, args.test_metric)
+    main(args.dataset_folder, args.pretrain_file)
 
     

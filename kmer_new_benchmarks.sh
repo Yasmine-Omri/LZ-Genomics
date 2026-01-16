@@ -1,25 +1,47 @@
+'''
+New benchmarks
+[
+  ["human_nontata_promoters", "benchmarks/genomic_benchmarks/data/human_nontata_promoters"],
+  ["human_enhancers_cohn", "benchmarks/genomic_benchmarks/data/human_enhancers_cohn"],
+  ["human_enhancers_ensembl", "benchmarks/genomic_benchmarks/data/human_enhancers_ensembl"],
+  ["human_ocr_ensembl", "benchmarks/genomic_benchmarks/data/human_ocr_ensembl"],
+  ["human_ensembl_regulatory", "benchmarks/genomic_benchmarks/data/human_ensembl_regulatory"],
+  ["dummy_mouse_enhancers_ensembl", "benchmarks/genomic_benchmarks/data/dummy_mouse_enhancers_ensembl"],
+  ["demo_coding_vs_intergenomic_seqs", "benchmarks/genomic_benchmarks/data/demo_coding_vs_intergenomic_seqs"],
+  ["demo_human_or_worm", "benchmarks/genomic_benchmarks/data/demo_human_or_worm"],
+
+  ["gue_plus_fungi", "benchmarks/GUE_v2/fungi/species_20"],
+  ["gue_plus_virus", "benchmarks/GUE_v2/virus/species_40"],
+  ["bend_cpg", "benchmarks/BEND/data/cpg"],
+  ["bend_histone_modification", "benchmarks/BEND/data/histone_modification"],
+  ["bend_chromatin_accessibility", "benchmarks/BEND/data/chromatin_accessibility"],
+  ["dart_task1", "benchmarks/DART-EVAL/data/task1"]
+]
+
+'''
+
+
+
 #!/usr/bin/env bash
 set -euo pipefail
 set +o braceexpand   # avoid accidental {a,b} expansion
 
 # ----------- USER KNOBS -----------
-OUTPUT_DIR="${OUTPUT_DIR:-./kmer_train_reports_acc_pretrain}"
+OUTPUT_DIR="${OUTPUT_DIR:-./kmer_train_reports_acc_pretrain_32threads}"  # output folder
 TOOL="${TOOL:-jellyfish}"                  # jellyfish | kmc3 | squeakr
 JOBS="${JOBS:-1}"                          # parallel datasets
 SKIP_IF_EXISTS="${SKIP_IF_EXISTS:-0}"      # 1=skip if report exists, 0=overwrite
 
 # Hyperparameter sweeps (space-separated; Python accepts both styles too)
 KS="${KS:-3 6 9 12 15 19}"
-# KS="${KS:-3 4 5 6}"
 ALPHAS="${ALPHAS:-0.5 1.0}"
-FEATURE_MODE="${FEATURE_MODE:-count}"
+FEATURE_MODE="${FEATURE_MODE:-count binary}"
 CANONICAL="${CANONICAL:-True}"
 HANDLE_N="${HANDLE_N:-remove}"
 SELECT_BY="${SELECT_BY:-acc}"              # acc | mcc
 
 # Empirical background prior (optional)
 USE_EMPIRICAL_PRIOR="${USE_EMPIRICAL_PRIOR:-False}"  # auto|True|False
-PRETRAIN_FASTA="${PRETRAIN_FASTA:-}"                # path to unlabeled DNA FASTA (or empty)
 PRETRAIN_CSV="${PRETRAIN_CSV:-}"                    # path to unlabeled CSV (or empty)
 PRETRAIN_CSV_COL="${PRETRAIN_CSV_COL:-}"            # column name in CSV
 PRETRAIN_CHUNK_LEN="${PRETRAIN_CHUNK_LEN:-0}"       # chunk windows if single long sequence
@@ -42,49 +64,27 @@ INF_THREADS="${INF_THREADS:-32}"  # threads for inference in KmerBaseline_extern
 mkdir -p "$OUTPUT_DIR"
 
 # Map: dataset_folder -> output filename (uncomment what you want)
+# Map: dataset_folder -> output filename
 declare -A DATASET_OUTPUTS=(
-    #Mouse
-    ["./GUE/mouse/0"]="mouse0.txt"
-    ["./GUE/mouse/1"]="mouse1.txt"
-    ["./GUE/mouse/2"]="mouse2.txt"
-    ["./GUE/mouse/3"]="mouse3.txt"
-    ["./GUE/mouse/4"]="mouse4.txt"
+    ["benchmarks/genomic_benchmarks/data/human_nontata_promoters"]="human_nontata_promoters.txt"
+    ["benchmarks/genomic_benchmarks/data/human_enhancers_cohn"]="human_enhancers_cohn.txt"
+    ["benchmarks/genomic_benchmarks/data/human_enhancers_ensembl"]="human_enhancers_ensembl.txt"
+    ["benchmarks/genomic_benchmarks/data/human_ocr_ensembl"]="human_ocr_ensembl.txt"
+    ["benchmarks/genomic_benchmarks/data/human_ensembl_regulatory"]="human_ensembl_regulatory.txt"
+    ["benchmarks/genomic_benchmarks/data/dummy_mouse_enhancers_ensembl"]="dummy_mouse_enhancers_ensembl.txt"
+    ["benchmarks/genomic_benchmarks/data/demo_coding_vs_intergenomic_seqs"]="demo_coding_vs_intergenomic_seqs.txt"
+    ["benchmarks/genomic_benchmarks/data/demo_human_or_worm"]="demo_human_or_worm.txt"
 
-    #TF
-    ["./GUE/tf/0"]="tf0.txt"
-    ["./GUE/tf/1"]="tf1.txt"
-    ["./GUE/tf/2"]="tf2.txt"
-    ["./GUE/tf/3"]="tf3.txt"
-    ["./GUE/tf/4"]="tf4.txt"
-
-    #Splice
-    ["./GUE/splice/reconstructed"]="splice.txt"
-
-    #Prom
-    ["./GUE/prom/prom_300_all"]="prom_300_all.txt"
-    ["./GUE/prom/prom_300_notata"]="prom_300_notata.txt"
-    ["./GUE/prom/prom_300_tata"]="prom_300_tata.txt"
-    ["./GUE/prom/prom_core_all"]="prom_core_all.txt"
-    ["./GUE/prom/prom_core_notata"]="prom_core_notata.txt"
-    ["./GUE/prom/prom_core_tata"]="prom_core_tata.txt"
-
-    #EMP
-    ["./GUE/EMP/H3"]="H3.txt"
-    ["./GUE/EMP/H3K4me1"]="H3K4me1.txt"
-    ["./GUE/EMP/H3K4me2"]="H3K4me2.txt"
-    ["./GUE/EMP/H3K4me3"]="H3K4me3.txt"
-    ["./GUE/EMP/H3K9ac"]="H3K9ac.txt"
-    ["./GUE/EMP/H3K14ac"]="H3K14ac.txt"
-    ["./GUE/EMP/H3K36me3"]="H3K36me3.txt"
-    ["./GUE/EMP/H3K79me3"]="H3K79me3.txt"
-    ["./GUE/EMP/H4"]="H4.txt"
-    ["./GUE/EMP/H4ac"]="H4ac.txt"
-
-    #Covid
-    ["./GUE/virus/covid"]="covid.txt"
-
+    ["benchmarks/GUE_v2/fungi/species_20"]="gue_plus_fungi.txt"
+    ["benchmarks/GUE_v2/virus/species_40"]="gue_plus_virus.txt"
+    ["benchmarks/BEND/data/cpg"]="bend_cpg.txt"
+    ["benchmarks/BEND/data/histone_modification"]="bend_histone_modification.txt"
+    ["benchmarks/BEND/data/chromatin_accessibility"]="bend_chromatin_accessibility.txt"
+    ["benchmarks/DART-EVAL/data/task1"]="dart_task1.txt"
 )
 
+
+# KMER_SCRIPT="${KMER_SCRIPT:-./KmerBaseline_external.py}"
 KMER_SCRIPT="${KMER_SCRIPT:-./KmerBaseline_rust.py}"
 
 
@@ -117,7 +117,6 @@ for DATASET_FOLDER in "${!DATASET_OUTPUTS[@]}"; do
       )
 
   # prior inputs (optional)
-  if [[ -n "${PRETRAIN_FASTA}" ]]; then CMD+=( --pretrain_fasta "$PRETRAIN_FASTA" ); fi
   if [[ -n "${PRETRAIN_CSV}" ]]; then CMD+=( --pretrain_csv "$PRETRAIN_CSV" ); fi
   if [[ -n "${PRETRAIN_CSV_COL}" ]]; then CMD+=( --pretrain_csv_col "$PRETRAIN_CSV_COL" ); fi
   CMD+=( --pretrain_chunk_len "$PRETRAIN_CHUNK_LEN" --pretrain_chunk_stride "$PRETRAIN_CHUNK_STRIDE" )
@@ -139,6 +138,8 @@ for DATASET_FOLDER in "${!DATASET_OUTPUTS[@]}"; do
 
   printf 'RUN:'; printf ' %q' "${CMD[@]}"; printf ' > %q\n' "$OUTFILE"
   sem "$JOBS" "${CMD[@]}" > "$OUTFILE" 2>&1
+  # # FIXME: debug
+  # ${CMD[@]}
 done
 
 wait

@@ -19,7 +19,7 @@ OUTPUTS:
 
 EXAMPLE USAGE:
 
-python Train.py -dataset_folder "$DATASET_FOLDER" -pretrain_file "$PRETRAIN_FILE" --include_prev_context "{False}" --gamma "{0.1, 0.33, 0.5, 0.75, 1, 3, 5}" --nb_train_iterations "{1, 3, 5, 7, 10}" --ratio_pretrain_train "{0}"\ --handle_n_setting "{remove}" --ensemble_type "{entropy}" --num_threads "{64}" > "$OUTPUT_DIR/$OUTPUT_FILE"
+python Train.py -motif_name "$motif_name" -pretrain_file "$PRETRAIN_FILE" --include_prev_context "{False}" --gamma "{0.1, 0.33, 0.5, 0.75, 1, 3, 5}" --nb_train_iterations "{1, 3, 5, 7, 10}" --ratio_pretrain_train "{0}"\ --handle_n_setting "{remove}" --ensemble_type "{entropy}" --num_threads "{64}" > "$OUTPUT_DIR/$OUTPUT_FILE"
 '''
 
 from lz78 import Sequence, CharacterMap, LZ78SPA
@@ -203,7 +203,7 @@ def handle_N(data, setting="remove"):
     return pd.DataFrame(new_data)
 
 @profile
-def main(dataset_folder, pretrain_file, val_metric, test_metric):
+def main(motif_name, pretrain_file, val_metric, test_metric):
     global INCLUDE_PREV_CONTEXT
     global GAMMA
     global NB_TRAIN_ITERATIONS 
@@ -226,9 +226,9 @@ def main(dataset_folder, pretrain_file, val_metric, test_metric):
     read_data_in_time = time.perf_counter()
     
     # Read train, val, test data 
-    train_path = f"{dataset_folder}/train.csv"
-    val_path = f"{dataset_folder}/dev.csv"
-    test_path = f"{dataset_folder}/test.csv"
+    train_path = f"{motif_name}"
+    val_path = f"motif_training_csv/dev.csv"
+    test_path = f"motif_training_csv/test.csv"
     
 
     train_data = pd.read_csv(train_path)
@@ -410,11 +410,9 @@ def main(dataset_folder, pretrain_file, val_metric, test_metric):
         spa_bytes = bytearray(sp.to_bytes())
         print(f"Mem in MB: {len(spa_bytes) / (1024 * 1024):.2f}", flush=True)
         makedirs("best_spas", exist_ok=True)
-        # Extract the part after 'GUE/' and replace slashes with underscores
-        binary_file_name = dataset_folder.split("GUE/", 1)[-1].replace("/", "_")
         
         # Create the full path for the binary file
-        binary_file_path = os.path.join("best_spas/", f"{binary_file_name}_{label}.bin")
+        binary_file_path = os.path.join("motif_spas/", f"{motif_name}_{label}.bin")
         label += 1
         # Save the binary file
         with open(binary_file_path, 'wb') as file:
@@ -441,7 +439,7 @@ if __name__ == "__main__":
     #Parse all arguments
     parser = argparse.ArgumentParser(description="Script for training and testing SPA model")
 
-    parser.add_argument("-dataset_folder", type=str, required=True, help="Path to the dataset folder")
+    parser.add_argument("-motif_name", type=str, required=True, help="Path to the dataset folder")
     parser.add_argument("-pretrain_file", type=str, required=True, help="Path to the pretraining file")
     parser.add_argument("--include_prev_context", type=str, required=True,
                         help="Set of values for INCLUDE_PREV_CONTEXT, e.g., '{True, False}'")
@@ -495,8 +493,10 @@ if __name__ == "__main__":
     num_threads = parse_set(args.num_threads)
     num_threads = int(list(num_threads)[0])
 
-    max_depth = [None] + [int(x) for x in list(parse_set(args.max_depth))]
+    print(f"max depth arg: {args.max_depth}")
 
-    main(args.dataset_folder, args.pretrain_file, args.validation_metric, args.test_metric)
+    max_depth = [None] + ([int(x) for x in list(parse_set(args.max_depth))] if args.max_depth != "{}" else [])
+
+    main(args.motif_name, args.pretrain_file, args.validation_metric, args.test_metric)
 
     

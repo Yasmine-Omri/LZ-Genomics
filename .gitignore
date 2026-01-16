@@ -16,3 +16,16 @@ test.ipynb
 Train_nsagan.py
 
 TrainOutputToCSV.py
+results/benchmarks/DART-EVAL/data/**/*.csv
+benchmarks/DART-EVAL/data/**/*.tsv
+*.h5
+*.fa
+*.fasta
+*.fai
+*.gzi
+*.gz
+
+
+data/
+archive/
+outputs/
