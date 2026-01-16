@@ -24,3 +24,8 @@ benchmarks/DART-EVAL/data/**/*.tsv
 *.fai
 *.gzi
 *.gz
+
+
+data/
+archive/
+outputs/

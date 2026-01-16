@@ -225,6 +225,7 @@ def augment_shuffle(train_data, aug_factor, preserve_kmer=2):
         [train_data, pd.DataFrame(new_negatives_train, columns=['sequence', 'label'])],
         ignore_index=True
     )
+    return train_data
 
 
 def compute_scores_matrix(data_df: pd.DataFrame, spas: list[LZ78SPA], n_threads=32):
@@ -276,7 +277,8 @@ def main(
     hyperparams: HyperparameterSweep,
     num_threads: int = 32,
     revcomp_augment_factor: float = 0.0,
-    target_class_ratios: list[float] = []
+    target_class_ratios: list[float] = [],
+    no_ensemble: bool = False
 ):
     read_data_in_time = time.perf_counter()
     
@@ -303,10 +305,12 @@ def main(
      # check that class_ratios has one entry per class and sums to 1.0
     assert len(target_class_ratios) == n_classes and abs(sum(target_class_ratios) - 1.0) < 1e-6, \
         "class_ratios must have one entry per class and sum to 1.0"
-    print(f"Using class ratios: {target_class_ratios}", flush=True)
+    if balance_classes:
+        print(f"Using class ratios: {target_class_ratios}", flush=True)
 
     raw_class_ratios = train_data['label'].value_counts(normalize=True).sort_index().tolist()
-    print(f"Raw class ratios: {raw_class_ratios}", flush=True)
+    if balance_classes:
+        print(f"Raw class ratios: {raw_class_ratios}", flush=True)
 
     # Downsample classes to meet target ratios
     # raw * sample = target so sample propto target/raw
@@ -314,7 +318,8 @@ def main(
     # we want to max weight to be 1.0
     max_weight = max(sample_weights)
     sample_weights = [w / max_weight for w in sample_weights]
-    print(f"Sampling weights: {sample_weights}", flush=True)
+    if balance_classes:
+        print(f"Sampling weights: {sample_weights}", flush=True)
     
     unique_labels = train_data['label'].unique()
     
@@ -374,6 +379,12 @@ def main(
                 backshift_ctx_len=BACKSHIFT_CTX_LEN,
                 backshift_break_at_phrase=True
             )
+            if no_ensemble:
+                spa[i].set_inference_config(
+                    lb=0,
+                    ensemble_n=1,
+                    backshift_parsing=False,
+                )
 
         #Pretrain spas
         nb_pretrain_symbols = math.ceil(ratio_pretrain_train * nb_train_symbols)
@@ -475,6 +486,12 @@ def main(
             backshift_ctx_len=BACKSHIFT_CTX_LEN,
             backshift_break_at_phrase=True
         )
+        if no_ensemble:
+            spa[i].set_inference_config(
+                lb=0,
+                ensemble_n=1,
+                backshift_parsing=False
+            )
 
     train_data = handle_N(train_data, setting=best_train_config.handle_N_setting)
     nb_train_seqs = len(train_data)
@@ -590,6 +607,8 @@ if __name__ == "__main__":
                         help=("Set of class ratios for datasets with imbalanced classes, e.g., "
                         "'1 10' means each epoch will consist of 1 negative and 10 positive samples. "
                         "These need not sum to 1.0. Defaults to empty (no class weighting)."))
+    parser.add_argument("--no_ensemble", action='store_true',
+                        help="If set, do not use ensemble methods during inference.")
     args = parser.parse_args()
 
     include_prev_context = [s.lower() == 'true' for s in args.include_prev_context]
@@ -616,6 +635,7 @@ if __name__ == "__main__":
         hyperparams=hyperparams,
         num_threads=args.num_threads,
         revcomp_augment_factor=args.revcomp_augment_factor,
-        target_class_ratios=args.class_ratios
+        target_class_ratios=args.class_ratios,
+        no_ensemble=args.no_ensemble
     )
 

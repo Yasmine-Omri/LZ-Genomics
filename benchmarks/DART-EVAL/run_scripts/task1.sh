@@ -1,12 +1,10 @@
-'''
-task1 (binary classification):
+# task1 (binary classification):
 
-Note: 
-- the max tree depth is set to 16 (feel free to update)
-- the minimal sweep is used (including entropy for ensemble heuristic)
-- The Ns are removed (however, note that they are more substantial here, over 800). Might want to think about deterministically replacing them?
+# Note: 
+# - the max tree depth is set to 16 (feel free to update)
+# - the minimal sweep is used (including entropy for ensemble heuristic)
+# - The Ns are removed (however, note that they are more substantial here, over 800). Might want to think about deterministically replacing them?
 
-'''
 
 DATASET_FOLDER="../data/task1"
 PRETRAIN_FILE="../../../dnabert_2_pretrain/dev.txt"

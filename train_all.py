@@ -37,9 +37,9 @@ def main(
             "--num_threads", "32",
             "--validation_metric", metric,
             "--test_metric", metric,
-            "--revcomp_augment_factor", "1",
-            "--class_ratios", "0",
-            # "--augmentation_factors", "{0, 0.5, 1, 2}",
+            "--no_ensemble"
+            # "--revcomp_augment_factor", "1",
+            # "--augmentation_factors", "0", "0.25", "0.5",
             # "--shuffle_preserve_kmer", "3",
             # "--max_depth", "4", "6"
         ]
@@ -49,7 +49,7 @@ def main(
             with open(output_path, "w") as f:
                 subprocess.run(cmd, check=True, stdout=f, stderr=subprocess.STDOUT)
         except subprocess.CalledProcessError as e:
-            print(f"Command output: {e.output.decode('utf-8')}")
+            print(f"Command errored: {e}")
             raise e
 
 if __name__ == "__main__":

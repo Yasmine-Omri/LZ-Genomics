@@ -3,15 +3,15 @@ set -euo pipefail
 set +o braceexpand   # avoid accidental {a,b} expansion
 
 # ----------- USER KNOBS -----------
-OUTPUT_DIR="${OUTPUT_DIR:-./kmer_train_reports_acc_pretrain_32threads}"  # output folder
+OUTPUT_DIR="${OUTPUT_DIR:-./kmer_train_reports_GC_content_only}"  # output folder
 TOOL="${TOOL:-jellyfish}"                  # jellyfish | kmc3 | squeakr
 JOBS="${JOBS:-1}"                          # parallel datasets
 SKIP_IF_EXISTS="${SKIP_IF_EXISTS:-0}"      # 1=skip if report exists, 0=overwrite
 
 # Hyperparameter sweeps (space-separated; Python accepts both styles too)
-KS="${KS:-3 6 9 12 15 19}"
+KS="${KS:-1}"
 ALPHAS="${ALPHAS:-0.5 1.0}"
-FEATURE_MODE="${FEATURE_MODE:-count binary}"
+FEATURE_MODE="${FEATURE_MODE:-count}"
 CANONICAL="${CANONICAL:-True}"
 HANDLE_N="${HANDLE_N:-remove}"
 SELECT_BY="${SELECT_BY:-acc}"              # acc | mcc

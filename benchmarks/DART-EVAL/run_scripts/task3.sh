@@ -1,12 +1,10 @@
-'''
-task1 (binary classification):
+# task1 (binary classification):
 
-Note: 
-- the max tree depth is set to 16 (feel free to update)
-- the minimal sweep is used (including entropy for ensemble heuristic)
-- The Ns are removed (however, note that they are more substantial here, over 800). Might want to think about deterministically replacing them?
+# Note: 
+# - the max tree depth is set to 16 (feel free to update)
+# - the minimal sweep is used (including entropy for ensemble heuristic)
+# - The Ns are removed (however, note that they are more substantial here, over 800). Might want to think about deterministically replacing them?
 
-'''
 
 DATASET_FOLDER="../data/task3"
 #DATASET_FOLDER="/Users/yasmineomri/Documents/EE376C/lz78_rust/repo/rebuttal_bench/data/task_3_peak_classification/lz_csvs"
